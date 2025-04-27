@@ -41,7 +41,7 @@ export function Header() {
           <div className="w-full flex justify-between items-center">
             <Link to="/" className="flex items-center space-x-2">
               <img 
-                src="/lovable-uploads/91bc8713-a543-445a-8dca-c2524de29316.png"
+                src="/lovable-uploads/cd11890b-c610-464d-b694-2b59ee09a21d.png"
                 alt="CuteList Logo"
                 className="h-8 w-8"
               />

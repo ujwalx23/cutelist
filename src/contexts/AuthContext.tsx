@@ -5,8 +5,10 @@ import type { User } from '@supabase/supabase-js';
 
 interface AuthContextType {
   user: User | null;
-  signIn: (email: string, password: string) => Promise<void>;
-  signUp: (email: string, password: string) => Promise<void>;
+  signInWithPhone: (phone: string) => Promise<void>;
+  verifyOTP: (phone: string, token: string) => Promise<void>;
+  signInWithPassword: (phone: string, password: string) => Promise<void>;
+  signUp: (phone: string, password: string) => Promise<void>;
   signOut: () => Promise<void>;
   loading: boolean;
 }
@@ -33,17 +35,38 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return () => subscription.unsubscribe();
   }, []);
 
-  const signUp = async (email: string, password: string) => {
+  const signUp = async (phone: string, password: string) => {
     const { error } = await supabase.auth.signUp({
-      email,
+      phone,
       password,
+      options: {
+        data: {
+          phone: phone
+        }
+      }
     });
     if (error) throw error;
   };
 
-  const signIn = async (email: string, password: string) => {
+  const signInWithPhone = async (phone: string) => {
+    const { error } = await supabase.auth.signInWithOtp({
+      phone,
+    });
+    if (error) throw error;
+  };
+
+  const verifyOTP = async (phone: string, token: string) => {
+    const { error } = await supabase.auth.verifyOtp({
+      phone,
+      token,
+      type: 'sms',
+    });
+    if (error) throw error;
+  };
+
+  const signInWithPassword = async (phone: string, password: string) => {
     const { error } = await supabase.auth.signInWithPassword({
-      email,
+      phone,
       password,
     });
     if (error) throw error;
@@ -55,7 +78,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, signIn, signUp, signOut, loading }}>
+    <AuthContext.Provider value={{ 
+      user, 
+      signInWithPhone, 
+      verifyOTP, 
+      signInWithPassword, 
+      signUp,
+      signOut, 
+      loading 
+    }}>
       {children}
     </AuthContext.Provider>
   );

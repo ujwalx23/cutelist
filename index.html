@@ -3,27 +3,24 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>CuteList - Adorable Task Management</title>
-    <meta name="description" content="CuteList - A cute and functional to-do list app" />
-    <meta name="author" content="CuteList" />
-    
-    <link rel="icon" href="/lovable-uploads/cd11890b-c610-464d-b694-2b59ee09a21d.png" type="image/png">
-
-    <meta property="og:title" content="CuteList - Adorable Task Management" />
-    <meta property="og:description" content="CuteList - A cute and functional to-do list app" />
-    <meta property="og:type" content="website" />
-    <meta property="og:image" content="https://lovable.dev/opengraph-image-p98pqg.png" />
-
-    <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:site" content="@CuteList" />
-    <meta name="twitter:image" content="https://lovable.dev/opengraph-image-p98pqg.png" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.ico" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <meta name="theme-color" content="#9b87f5" />
+    <link rel="manifest" href="/manifest.json" />
+    <link rel="apple-touch-icon" href="/lovable-uploads/cd11890b-c610-464d-b694-2b59ee09a21d.png" />
+    <title>CuteList - Your Adorable Task Manager</title>
   </head>
-
   <body>
     <div id="root"></div>
-    <!-- IMPORTANT: DO NOT REMOVE THIS SCRIPT TAG OR THIS VERY COMMENT! -->
-    <script src="https://cdn.gpteng.co/gptengineer.js" type="module"></script>
     <script type="module" src="/src/main.tsx"></script>
+    <script>
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('/service-worker.js')
+            .then(reg => console.log('Service worker registered'))
+            .catch(err => console.log('Service worker registration failed', err));
+        });
+      }
+    </script>
   </body>
 </html>

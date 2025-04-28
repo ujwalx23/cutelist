@@ -14,6 +14,7 @@ import CalendarPage from "./pages/Calendar";
 import Calculator from "./pages/Calculator";
 import Pomodoro from "./pages/Pomodoro";
 import Notes from "./pages/Notes";
+import Profile from "./pages/Profile";
 import { useState } from "react";
 
 const App = () => {
@@ -36,6 +37,7 @@ const App = () => {
               <Route path="/notes" element={<Notes />} />
               <Route path="/kindlove" element={<KindLove />} />
               <Route path="/contact" element={<Contact />} />
+              <Route path="/profile" element={<Profile />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </BrowserRouter>

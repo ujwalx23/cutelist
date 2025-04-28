@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -10,7 +11,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { User } from "lucide-react";
+import { User, Home, Book, Calendar, Calculator, Clock, FileText } from "lucide-react";
 
 export function Header() {
   const [showAuthModal, setShowAuthModal] = useState(false);
@@ -50,6 +51,30 @@ export function Header() {
             </Link>
             
             <nav className="flex items-center space-x-4">
+              <Link to="/" className="text-sm flex items-center font-medium hover:text-primary">
+                <Home className="h-4 w-4 mr-1" />
+                <span className="hidden md:inline">Home</span>
+              </Link>
+              <Link to="/books" className="text-sm flex items-center font-medium hover:text-primary">
+                <Book className="h-4 w-4 mr-1" />
+                <span className="hidden md:inline">Books</span>
+              </Link>
+              <Link to="/calendar" className="text-sm flex items-center font-medium hover:text-primary">
+                <Calendar className="h-4 w-4 mr-1" />
+                <span className="hidden md:inline">Calendar</span>
+              </Link>
+              <Link to="/calculator" className="text-sm flex items-center font-medium hover:text-primary">
+                <Calculator className="h-4 w-4 mr-1" />
+                <span className="hidden md:inline">Calculator</span>
+              </Link>
+              <Link to="/pomodoro" className="text-sm flex items-center font-medium hover:text-primary">
+                <Clock className="h-4 w-4 mr-1" />
+                <span className="hidden md:inline">Pomodoro</span>
+              </Link>
+              <Link to="/notes" className="text-sm flex items-center font-medium hover:text-primary">
+                <FileText className="h-4 w-4 mr-1" />
+                <span className="hidden md:inline">Notes</span>
+              </Link>
               <Link to="/kindlove" className="text-sm font-medium hover:text-primary">
                 KindLove
               </Link>

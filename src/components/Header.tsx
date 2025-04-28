@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -51,6 +50,9 @@ export function Header() {
             </Link>
             
             <nav className="flex items-center space-x-4">
+              <Link to="/kindlove" className="text-sm font-medium hover:text-primary">
+                KindLove
+              </Link>
               <Link to="/contact" className="text-sm font-medium hover:text-primary">
                 Contact
               </Link>

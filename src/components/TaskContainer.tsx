@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { TaskInput } from "./TaskInput";
 import { TaskList } from "./TaskList";
@@ -6,6 +5,7 @@ import { Task } from "@/types/task";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { Button } from "@/components/ui/button";
 
 export function TaskContainer() {
   const [tasks, setTasks] = useState<Task[]>([]);
@@ -137,7 +137,15 @@ export function TaskContainer() {
     return (
       <div className="text-center py-10">
         <h3 className="text-lg font-medium text-cutelist-primary mb-2">Please sign in</h3>
-        <p className="text-gray-400">Sign in to manage your tasks</p>
+        <Button variant="link" onClick={() => {
+          const authModal = document.querySelector('[role="dialog"]');
+          if (authModal) {
+            const signInButton = authModal.querySelector('button');
+            if (signInButton) signInButton.click();
+          }
+        }}>
+          Sign in to manage your tasks
+        </Button>
       </div>
     );
   }

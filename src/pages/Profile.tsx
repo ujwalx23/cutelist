@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Header } from "@/components/Header";
@@ -15,9 +14,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { User } from "lucide-react";
 
 interface ProfileData {
-  username: string;
-  bio: string;
-  avatar_url: string;
+  username: string | null;
+  bio: string | null;
+  avatar_url: string | null;
 }
 
 const Profile = () => {
@@ -39,21 +38,19 @@ const Profile = () => {
 
     const fetchProfile = async () => {
       try {
-        const { data, error } = await supabase
+        const { data: profileData, error } = await supabase
           .from("profiles")
           .select("username, bio, avatar_url")
           .eq("id", user.id)
-          .single();
+          .maybeSingle();
 
-        if (error && error.code !== "PGRST116") {
-          throw error;
-        }
+        if (error) throw error;
 
-        if (data) {
+        if (profileData) {
           setProfile({
-            username: data.username || "",
-            bio: data.bio || "",
-            avatar_url: data.avatar_url || "",
+            username: profileData.username || "",
+            bio: profileData.bio || "",
+            avatar_url: profileData.avatar_url || "",
           });
         }
       } catch (error) {
@@ -69,15 +66,15 @@ const Profile = () => {
     
     setLoading(true);
     try {
-      const updates = {
-        id: user.id,
-        username: profile.username,
-        bio: profile.bio,
-        avatar_url: profile.avatar_url,
-        updated_at: new Date(),
-      };
-
-      const { error } = await supabase.from("profiles").upsert(updates);
+      const { error } = await supabase
+        .from("profiles")
+        .update({
+          username: profile.username,
+          bio: profile.bio,
+          avatar_url: profile.avatar_url,
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", user.id);
 
       if (error) throw error;
 

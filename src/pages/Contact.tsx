@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { useToast } from "@/hooks/use-toast";
@@ -20,7 +19,7 @@ import { Card } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { 
   Mail, Phone, Send, MessageSquare, HelpCircle, AlertCircle,
-  Linkedin, Discord
+  Linkedin, MessageCircle
 } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 
@@ -347,7 +346,7 @@ const Contact = () => {
                       className="hover:scale-110 transition-transform"
                     >
                       <Button variant="outline" size="icon" className="rounded-full h-12 w-12">
-                        <Discord className="h-6 w-6" />
+                        <MessageCircle className="h-6 w-6" />
                       </Button>
                     </a>
                   </div>

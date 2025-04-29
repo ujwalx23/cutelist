@@ -65,13 +65,13 @@ const Achievements = () => {
             id: 'book-1', 
             content: 'Atomic Habits', 
             completed_at: new Date(Date.now() - 86400000 * 3).toISOString(), 
-            type: 'book' 
+            type: 'book' as const
           },
           { 
             id: 'book-2', 
             content: 'Deep Work', 
             completed_at: new Date(Date.now() - 86400000 * 7).toISOString(), 
-            type: 'book' 
+            type: 'book' as const
           },
         ];
         
@@ -80,13 +80,13 @@ const Achievements = () => {
             id: 'event-1', 
             content: 'Team Meeting', 
             completed_at: new Date(Date.now() - 86400000 * 2).toISOString(), 
-            type: 'event' 
+            type: 'event' as const
           },
           { 
             id: 'event-2', 
             content: 'Project Deadline', 
             completed_at: new Date(Date.now() - 86400000 * 5).toISOString(), 
-            type: 'event' 
+            type: 'event' as const
           },
         ];
         

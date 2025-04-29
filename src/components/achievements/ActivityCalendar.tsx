@@ -3,7 +3,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Calendar } from "@/components/ui/calendar";
 import { Skeleton } from "@/components/ui/skeleton";
 import { CalendarCheck2 } from "lucide-react";
-import { Date as DateType } from "date-fns";
 
 interface ActivityCalendarProps {
   isLoading: boolean;

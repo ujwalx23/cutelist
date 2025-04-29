@@ -62,7 +62,7 @@ const Index = () => {
           </div>
         </main>
         <footer className="py-6 text-center text-gray-500 text-sm">
-          <p>CuteList © 2025 - Your adorable task manager</p>
+          <p>CuteList - Your adorable task manager</p>
         </footer>
       </div>
     </ThemeProvider>

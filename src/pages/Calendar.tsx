@@ -1,12 +1,23 @@
-
 import { useState } from "react";
 import { Header } from "@/components/Header";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import { Calendar } from "@/components/ui/calendar";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from "@/components/ui/tabs";
 import { generateId } from "@/lib/utils";
 import { CalendarDays, Plus, X } from "lucide-react";
 import { format } from "date-fns";
@@ -22,17 +33,17 @@ interface Event {
 const CalendarPage = () => {
   const [date, setDate] = useState<Date | undefined>(new Date());
   const [events, setEvents] = useState<Event[]>([
-    { 
-      id: "event1", 
-      title: "Team Meeting", 
+    {
+      id: "event1",
+      title: "Team Meeting",
       description: "Weekly team sync",
-      date: new Date(new Date().setDate(new Date().getDate() + 1))
+      date: new Date(new Date().setDate(new Date().getDate() + 1)),
     },
-    { 
-      id: "event2", 
-      title: "Doctor's Appointment", 
+    {
+      id: "event2",
+      title: "Doctor's Appointment",
       description: "Annual checkup",
-      date: new Date(new Date().setDate(new Date().getDate() + 3))
+      date: new Date(new Date().setDate(new Date().getDate() + 3)),
     },
   ]);
   const [newEventTitle, setNewEventTitle] = useState("");
@@ -41,39 +52,37 @@ const CalendarPage = () => {
 
   const addEvent = () => {
     if (!date || !newEventTitle) return;
-    
+
     const newEvent: Event = {
       id: generateId(),
       title: newEventTitle,
       description: newEventDescription,
       date: date,
     };
-    
+
     setEvents([...events, newEvent]);
     setNewEventTitle("");
     setNewEventDescription("");
   };
 
   const removeEvent = (id: string) => {
-    setEvents(events.filter(event => event.id !== id));
+    setEvents(events.filter((event) => event.id !== id));
   };
 
-  // Filter events for the selected date
   const selectedDateEvents = events.filter(
     (event) => date && event.date.toDateString() === date.toDateString()
   );
 
-  // Filter events for today and upcoming
   const today = new Date();
   today.setHours(0, 0, 0, 0);
-  
+
   const todayEvents = events.filter(
     (event) => event.date.toDateString() === today.toDateString()
   );
-  
-  const upcomingEvents = events.filter(
-    (event) => event.date > today
-  ).sort((a, b) => a.date.getTime() - b.date.getTime());
+
+  const upcomingEvents = events
+    .filter((event) => event.date > today)
+    .sort((a, b) => a.date.getTime() - b.date.getTime());
 
   return (
     <ThemeProvider>
@@ -89,31 +98,31 @@ const CalendarPage = () => {
                 Plan your days with our cute calendar
               </p>
 
-              <div className="w-full grid grid-cols-1 lg:grid-cols-3 gap-8">
-                <div className="glass-card p-6 rounded-xl">
+              <div className="w-full grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                <div className="glass-card p-6 rounded-xl w-full max-w-sm mx-auto">
                   <Calendar
                     mode="single"
                     selected={date}
                     onSelect={setDate}
-                    className="rounded-md pointer-events-auto"
+                    className="rounded-md pointer-events-auto w-full"
                   />
                 </div>
 
-                <div className="lg:col-span-2">
+                <div className="md:col-span-1 lg:col-span-2">
                   <Tabs defaultValue="day" className="w-full">
                     <TabsList className="grid w-full grid-cols-3 mb-4">
                       <TabsTrigger value="day">Selected Day</TabsTrigger>
                       <TabsTrigger value="today">Today</TabsTrigger>
                       <TabsTrigger value="upcoming">Upcoming</TabsTrigger>
                     </TabsList>
-                    
+
                     <TabsContent value="day" className="space-y-4">
                       <div className="flex items-center justify-between">
                         <h2 className="text-xl font-semibold">
                           {date ? format(date, "PPPP") : "Select a date"}
                         </h2>
                       </div>
-                      
+
                       {user && (
                         <Card className="bg-cutelist-dark/30 backdrop-blur-sm border-cutelist-primary/20">
                           <CardHeader>
@@ -136,8 +145,8 @@ const CalendarPage = () => {
                             </div>
                           </CardContent>
                           <CardFooter>
-                            <Button 
-                              onClick={addEvent} 
+                            <Button
+                              onClick={addEvent}
                               className="bg-cutelist-primary hover:bg-cutelist-secondary"
                               disabled={!date || !newEventTitle}
                             >
@@ -146,19 +155,24 @@ const CalendarPage = () => {
                           </CardFooter>
                         </Card>
                       )}
-                      
+
                       {selectedDateEvents.length > 0 ? (
                         <div className="space-y-4">
                           {selectedDateEvents.map((event) => (
-                            <Card key={event.id} className="bg-cutelist-dark/30 backdrop-blur-sm border-cutelist-primary/20">
+                            <Card
+                              key={event.id}
+                              className="bg-cutelist-dark/30 backdrop-blur-sm border-cutelist-primary/20"
+                            >
                               <CardHeader className="pb-2 flex flex-row justify-between items-start">
                                 <div>
                                   <CardTitle>{event.title}</CardTitle>
-                                  <CardDescription>{format(event.date, "p")}</CardDescription>
+                                  <CardDescription>
+                                    {format(event.date, "p")}
+                                  </CardDescription>
                                 </div>
-                                <Button 
-                                  variant="ghost" 
-                                  size="sm" 
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
                                   onClick={() => removeEvent(event.id)}
                                 >
                                   <X className="h-4 w-4 text-red-400" />
@@ -177,7 +191,9 @@ const CalendarPage = () => {
                           <div className="flex justify-center mb-4">
                             <CalendarDays className="h-12 w-12 text-cutelist-primary opacity-50" />
                           </div>
-                          <h3 className="text-lg font-medium text-cutelist-primary mb-2">No events for this day</h3>
+                          <h3 className="text-lg font-medium text-cutelist-primary mb-2">
+                            No events for this day
+                          </h3>
                           {user ? (
                             <p className="text-gray-400">Add an event to get started</p>
                           ) : (
@@ -192,15 +208,20 @@ const CalendarPage = () => {
                       {todayEvents.length > 0 ? (
                         <div className="space-y-4">
                           {todayEvents.map((event) => (
-                            <Card key={event.id} className="bg-cutelist-dark/30 backdrop-blur-sm border-cutelist-primary/20">
+                            <Card
+                              key={event.id}
+                              className="bg-cutelist-dark/30 backdrop-blur-sm border-cutelist-primary/20"
+                            >
                               <CardHeader className="pb-2 flex flex-row justify-between items-start">
                                 <div>
                                   <CardTitle>{event.title}</CardTitle>
-                                  <CardDescription>{format(event.date, "p")}</CardDescription>
+                                  <CardDescription>
+                                    {format(event.date, "p")}
+                                  </CardDescription>
                                 </div>
-                                <Button 
-                                  variant="ghost" 
-                                  size="sm" 
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
                                   onClick={() => removeEvent(event.id)}
                                 >
                                   <X className="h-4 w-4 text-red-400" />
@@ -219,26 +240,33 @@ const CalendarPage = () => {
                           <div className="flex justify-center mb-4">
                             <CalendarDays className="h-12 w-12 text-cutelist-primary opacity-50" />
                           </div>
-                          <h3 className="text-lg font-medium text-cutelist-primary mb-2">No events for today</h3>
+                          <h3 className="text-lg font-medium text-cutelist-primary mb-2">
+                            No events for today
+                          </h3>
                           <p className="text-gray-400">Enjoy your free day!</p>
                         </div>
                       )}
                     </TabsContent>
-                    
+
                     <TabsContent value="upcoming" className="space-y-4">
                       <h2 className="text-xl font-semibold">Upcoming Events</h2>
                       {upcomingEvents.length > 0 ? (
                         <div className="space-y-4">
                           {upcomingEvents.map((event) => (
-                            <Card key={event.id} className="bg-cutelist-dark/30 backdrop-blur-sm border-cutelist-primary/20">
+                            <Card
+                              key={event.id}
+                              className="bg-cutelist-dark/30 backdrop-blur-sm border-cutelist-primary/20"
+                            >
                               <CardHeader className="pb-2 flex flex-row justify-between items-start">
                                 <div>
                                   <CardTitle>{event.title}</CardTitle>
-                                  <CardDescription>{format(event.date, "PPP")}</CardDescription>
+                                  <CardDescription>
+                                    {format(event.date, "PPP")}
+                                  </CardDescription>
                                 </div>
-                                <Button 
-                                  variant="ghost" 
-                                  size="sm" 
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
                                   onClick={() => removeEvent(event.id)}
                                 >
                                   <X className="h-4 w-4 text-red-400" />
@@ -257,7 +285,9 @@ const CalendarPage = () => {
                           <div className="flex justify-center mb-4">
                             <CalendarDays className="h-12 w-12 text-cutelist-primary opacity-50" />
                           </div>
-                          <h3 className="text-lg font-medium text-cutelist-primary mb-2">No upcoming events</h3>
+                          <h3 className="text-lg font-medium text-cutelist-primary mb-2">
+                            No upcoming events
+                          </h3>
                           <p className="text-gray-400">Your schedule is clear!</p>
                         </div>
                       )}

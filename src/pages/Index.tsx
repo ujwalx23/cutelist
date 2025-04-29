@@ -14,27 +14,11 @@ const Index = () => {
   const { toast } = useToast();
   
   useEffect(() => {
-    // Check if we've recently redirected to prevent loops
-    const hasShownToast = sessionStorage.getItem('redirectToast');
-    
-    if (!user && !hasShownToast) {
-      toast({
-        title: "Please sign in",
-        description: "You need to sign in to access all features",
-        action: (
-          <Button variant="outline" size="sm" onClick={() => navigate("/auth")}>
-            Sign In
-          </Button>
-        ),
-      });
-      sessionStorage.setItem('redirectToast', 'true');
+    // Redirect to auth page if not signed in
+    if (!user) {
+      navigate("/auth");
     }
-    
-    return () => {
-      // Clear the flag when leaving the page
-      sessionStorage.removeItem('redirectToast');
-    };
-  }, [user, navigate, toast]);
+  }, [user, navigate]);
 
   return (
     <ThemeProvider>

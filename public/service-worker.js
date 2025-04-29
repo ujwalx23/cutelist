@@ -1,9 +1,10 @@
-const CACHE_NAME = 'cutelist-v3';
+
+const CACHE_NAME = 'cutelist-v4';
 const urlsToCache = [
   '/',
   '/index.html',
   '/manifest.json',
-  '/lovable-uploads/cd11890b-c610-464d-b694-2b59ee09a21d.png',
+  '/lovable-uploads/87c72f50-f842-4d3f-b009-26dd2477ed51.png',
   '/offline.html'
 ];
 
@@ -108,13 +109,16 @@ self.addEventListener('sync', (event) => {
 
 // Function to sync data when back online
 async function syncData(dataType) {
-  const offlineData = await localforage.getItem(`offline-${dataType}`);
-  if (!offlineData) return;
-  
   try {
+    // Get offline data from IndexedDB using localforage
+    const offlineData = await self.localforage?.getItem(`offline-${dataType}`);
+    if (!offlineData) return;
+    
     // Code to sync with server would go here based on data type
     console.log(`Syncing offline ${dataType} data:`, offlineData);
-    await localforage.removeItem(`offline-${dataType}`);
+    
+    // Clear synced data
+    await self.localforage?.removeItem(`offline-${dataType}`);
   } catch (error) {
     console.error(`Sync failed for ${dataType}:`, error);
   }
@@ -148,3 +152,6 @@ async function refreshBackgroundData() {
     console.error('Background refresh failed:', error);
   }
 }
+
+// Initialize localforage in the service worker scope
+self.importScripts('https://unpkg.com/localforage@1.10.0/dist/localforage.min.js');

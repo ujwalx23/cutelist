@@ -1,12 +1,10 @@
-
-const CACHE_NAME = 'cutelist-v2';
+const CACHE_NAME = 'cutelist-v3';
 const urlsToCache = [
   '/',
   '/index.html',
   '/manifest.json',
   '/lovable-uploads/cd11890b-c610-464d-b694-2b59ee09a21d.png',
-  '/assets/index-*.js',
-  '/assets/index-*.css'
+  '/offline.html'
 ];
 
 // Install event - cache assets
@@ -73,6 +71,7 @@ self.addEventListener('fetch', (event) => {
             // Clone the response because it's a one-time use stream
             const responseToCache = response.clone();
 
+            // Cache the newly fetched resources
             caches.open(CACHE_NAME)
               .then((cache) => {
                 cache.put(event.request, responseToCache);
@@ -82,7 +81,15 @@ self.addEventListener('fetch', (event) => {
           }
         ).catch(() => {
           // If both cache and network fail, show offline page
-          return caches.match('/offline.html') || new Response('You are offline');
+          if (event.request.mode === 'navigate') {
+            return caches.match('/offline.html') || new Response('You are offline');
+          }
+          
+          // Return a default response for other resources
+          return new Response('Network error occurred', { 
+            status: 408, 
+            headers: { 'Content-Type': 'text/plain' } 
+          });
         });
       })
   );
@@ -91,20 +98,25 @@ self.addEventListener('fetch', (event) => {
 // Add sync event for background syncing when connection is restored
 self.addEventListener('sync', (event) => {
   if (event.tag === 'sync-todos') {
-    event.waitUntil(syncTodos());
+    event.waitUntil(syncData('todos'));
+  } else if (event.tag === 'sync-memories') {
+    event.waitUntil(syncData('memories'));
+  } else if (event.tag === 'sync-pomodoro') {
+    event.waitUntil(syncData('pomodoro'));
   }
 });
 
-// Function to sync todos when back online
-async function syncTodos() {
-  const offlineData = await localforage.getItem('offline-todos');
+// Function to sync data when back online
+async function syncData(dataType) {
+  const offlineData = await localforage.getItem(`offline-${dataType}`);
   if (!offlineData) return;
   
   try {
-    // Code to sync with server would go here
-    await localforage.removeItem('offline-todos');
+    // Code to sync with server would go here based on data type
+    console.log(`Syncing offline ${dataType} data:`, offlineData);
+    await localforage.removeItem(`offline-${dataType}`);
   } catch (error) {
-    console.error('Sync failed:', error);
+    console.error(`Sync failed for ${dataType}:`, error);
   }
 }
 
@@ -114,3 +126,25 @@ self.addEventListener('message', (event) => {
     self.skipWaiting();
   }
 });
+
+// Periodic sync for keeping data fresh (if supported)
+self.addEventListener('periodicsync', (event) => {
+  if (event.tag === 'refresh-data') {
+    event.waitUntil(refreshBackgroundData());
+  }
+});
+
+// Background data refresh function
+async function refreshBackgroundData() {
+  try {
+    // Refresh cached data in the background
+    console.log('Performing background data refresh');
+    
+    // Example: update cached homepage
+    const cache = await caches.open(CACHE_NAME);
+    await cache.add('/');
+    
+  } catch (error) {
+    console.error('Background refresh failed:', error);
+  }
+}

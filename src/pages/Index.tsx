@@ -22,8 +22,8 @@ const Index = () => {
         title: "Please sign in",
         description: "You need to sign in to access all features",
         action: (
-          <Button variant="outline" size="sm" onClick={() => navigate("/")}>
-            Dismiss
+          <Button variant="outline" size="sm" onClick={() => navigate("/auth")}>
+            Sign In
           </Button>
         ),
       });
@@ -48,7 +48,9 @@ const Index = () => {
               {!user ? (
                 <div className="text-center mb-8">
                   <p className="mb-4 text-gray-300">Sign in to create and manage your tasks</p>
-                 
+                  <Button onClick={() => navigate("/auth")}>
+                    Sign In
+                  </Button>
                 </div>
               ) : (
                 <TaskContainer />

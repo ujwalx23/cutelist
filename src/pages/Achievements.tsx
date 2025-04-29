@@ -21,24 +21,28 @@ import {
   Trophy,
   CalendarCheck2,
   CheckCircle2,
-  Clock,
   BookOpen,
   Calendar as CalendarIcon,
   Star,
-  Award
+  Award,
+  Clock
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { useIsMobile } from "@/hooks/use-mobile";
+
+type TaskType = "todo" | "book" | "pomodoro";
 
 interface CompletedTask {
   id: string;
   content: string;
   completed_at: string;
-  type: "todo" | "book" | "event";
+  type: TaskType;
 }
 
 const Achievements = () => {
   const { user } = useAuth();
   const { toast } = useToast();
+  const isMobile = useIsMobile();
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
   const [highlightedDates, setHighlightedDates] = useState<Date[]>([]);
   
@@ -58,48 +62,21 @@ const Achievements = () => {
           
         if (todosError) throw todosError;
         
-        // We would fetch completed books and events from their respective tables
+        // We would fetch completed books and pomodoro from their respective tables
         // This is placeholder for the demo
-        const completedBooks = [
-          { 
-            id: 'book-1', 
-            content: 'Atomic Habits', 
-            completed_at: new Date(Date.now() - 86400000 * 3).toISOString(), 
-            type: 'book' as const
-          },
-          { 
-            id: 'book-2', 
-            content: 'Deep Work', 
-            completed_at: new Date(Date.now() - 86400000 * 7).toISOString(), 
-            type: 'book' as const
-          },
-        ];
-        
-        const completedEvents = [
-          { 
-            id: 'event-1', 
-            content: 'Team Meeting', 
-            completed_at: new Date(Date.now() - 86400000 * 2).toISOString(), 
-            type: 'event' as const
-          },
-          { 
-            id: 'event-2', 
-            content: 'Project Deadline', 
-            completed_at: new Date(Date.now() - 86400000 * 5).toISOString(), 
-            type: 'event' as const
-          },
-        ];
+        const completedBooks: CompletedTask[] = [];
+        const completedPomodoro: CompletedTask[] = [];
         
         // Transform todo data to match our format
         const formattedTodos = todos.map(todo => ({
           id: todo.id,
           content: todo.content,
           completed_at: todo.updated_at || todo.created_at,
-          type: 'todo' as const
+          type: 'todo' as TaskType
         }));
         
         // Combine all completed tasks
-        return [...formattedTodos, ...completedBooks, ...completedEvents];
+        return [...formattedTodos, ...completedBooks, ...completedPomodoro];
       } catch (error) {
         console.error("Error fetching completed tasks:", error);
         return [];
@@ -134,15 +111,7 @@ const Achievements = () => {
   const totalCompleted = completedTasks?.length || 0;
   const todosCompleted = completedTasks?.filter(task => task.type === 'todo').length || 0;
   const booksCompleted = completedTasks?.filter(task => task.type === 'book').length || 0;
-  const eventsCompleted = completedTasks?.filter(task => task.type === 'event').length || 0;
-  
-  // Get current month days
-  const currentMonthDays = selectedDate 
-    ? eachDayOfInterval({
-        start: startOfMonth(selectedDate),
-        end: endOfMonth(selectedDate)
-      })
-    : [];
+  const pomodoroCompleted = completedTasks?.filter(task => task.type === 'pomodoro').length || 0;
   
   // Calculate streak (placeholder logic)
   const calculateStreak = () => {
@@ -233,14 +202,14 @@ const Achievements = () => {
   }
   
   const renderAchievementBadges = () => {
-    // Example achievements based on task completion
+    // Achievements based on task completion
     const achievements = [
       { id: 1, name: "First Task", description: "Completed your first task", unlocked: todosCompleted >= 1, icon: <CheckCircle2 className="h-5 w-5" /> },
-      { id: 2, name: "Book Worm", description: "Completed reading a book", unlocked: booksCompleted >= 1, icon: <BookOpen className="h-5 w-5" /> },
-      { id: 3, name: "Early Bird", description: "Completed a task before 9 AM", unlocked: true, icon: <Clock className="h-5 w-5" /> },
-      { id: 4, name: "Task Master", description: "Completed 10 tasks", unlocked: todosCompleted >= 10, icon: <Award className="h-5 w-5" /> },
-      { id: 5, name: "3-Day Streak", description: "Completed tasks for 3 consecutive days", unlocked: currentStreak >= 3, icon: <Star className="h-5 w-5" /> },
-      { id: 6, name: "Calendar Expert", description: "Completed all scheduled events in a day", unlocked: eventsCompleted >= 2, icon: <CalendarIcon className="h-5 w-5" /> },
+      { id: 2, name: "Read 3 Books", description: "Completed reading 3 books", unlocked: booksCompleted >= 3, icon: <BookOpen className="h-5 w-5" /> },
+      { id: 3, name: "Completed 100 Tasks", description: "Completed 100 tasks", unlocked: todosCompleted >= 100, icon: <CheckCircle2 className="h-5 w-5" /> },
+      { id: 4, name: "7-Day Streak", description: "Completed tasks for 7 consecutive days", unlocked: currentStreak >= 7, icon: <CalendarCheck2 className="h-5 w-5" /> },
+      { id: 5, name: "30-Day Streak", description: "Completed tasks for 30 consecutive days", unlocked: currentStreak >= 30, icon: <Star className="h-5 w-5" /> },
+      { id: 6, name: "20 Pomodoro Sessions", description: "Completed 20 pomodoro work sessions", unlocked: pomodoroCompleted >= 20, icon: <Clock className="h-5 w-5" /> },
     ];
     
     return (
@@ -277,7 +246,7 @@ const Achievements = () => {
     <ThemeProvider>
       <div className="min-h-screen flex flex-col bg-cutelist-dark">
         <Header />
-        <main className="flex-1 container py-12">
+        <main className="flex-1 container py-8 md:py-12">
           <div className="max-w-5xl mx-auto px-4">
             <div className="flex flex-col md:flex-row items-center justify-between mb-6">
               <div>
@@ -356,8 +325,8 @@ const Achievements = () => {
                           <span className="font-medium">{booksCompleted}</span>
                         </div>
                         <div className="flex items-center justify-between">
-                          <span className="text-sm text-gray-400">Events completed:</span>
-                          <span className="font-medium">{eventsCompleted}</span>
+                          <span className="text-sm text-gray-400">Pomodoro sessions:</span>
+                          <span className="font-medium">{pomodoroCompleted}</span>
                         </div>
                         {mostProductiveDay && (
                           <div className="flex items-center justify-between mt-2 pt-2 border-t border-border/20">
@@ -408,7 +377,7 @@ const Achievements = () => {
                             <div className="mr-3">
                               {task.type === 'todo' && <CheckCircle2 className="h-5 w-5 text-green-500" />}
                               {task.type === 'book' && <BookOpen className="h-5 w-5 text-blue-500" />}
-                              {task.type === 'event' && <CalendarIcon className="h-5 w-5 text-purple-500" />}
+                              {task.type === 'pomodoro' && <Clock className="h-5 w-5 text-purple-500" />}
                             </div>
                             <div className="flex-1">
                               <p className="font-medium">{task.content}</p>

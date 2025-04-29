@@ -6,11 +6,11 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 const Calculator = () => {
   const [display, setDisplay] = useState("0");
   const [history, setHistory] = useState<string[]>([]);
-  const [memory, setMemory] = useState<number | null>(null);
   const [firstOperand, setFirstOperand] = useState<number | null>(null);
   const [operator, setOperator] = useState<string | null>(null);
   const [waitingForSecondOperand, setWaitingForSecondOperand] = useState(false);
@@ -19,6 +19,7 @@ const Calculator = () => {
   const [unitTo, setUnitTo] = useState<string>("inch");
   const [conversionValue, setConversionValue] = useState<string>("0");
   const [conversionResult, setConversionResult] = useState<string>("0");
+  const isMobile = useIsMobile();
 
   useEffect(() => {
     // Handle keyboard input
@@ -111,11 +112,81 @@ const Calculator = () => {
       }
       return;
     }
+    
+    if (nextOperator === "sin") {
+      try {
+        const result = Math.sin(inputValue * Math.PI / 180); // Convert to radians
+        setDisplay(String(result));
+        addToHistory(`sin(${inputValue}°) = ${result}`);
+      } catch (e) {
+        setDisplay("Error");
+      }
+      return;
+    }
+
+    if (nextOperator === "cos") {
+      try {
+        const result = Math.cos(inputValue * Math.PI / 180); // Convert to radians
+        setDisplay(String(result));
+        addToHistory(`cos(${inputValue}°) = ${result}`);
+      } catch (e) {
+        setDisplay("Error");
+      }
+      return;
+    }
+
+    if (nextOperator === "tan") {
+      try {
+        const result = Math.tan(inputValue * Math.PI / 180); // Convert to radians
+        setDisplay(String(result));
+        addToHistory(`tan(${inputValue}°) = ${result}`);
+      } catch (e) {
+        setDisplay("Error");
+      }
+      return;
+    }
+
+    if (nextOperator === "log") {
+      try {
+        const result = Math.log10(inputValue);
+        if (isNaN(result) || !isFinite(result)) {
+          setDisplay("Error");
+        } else {
+          setDisplay(String(result));
+          addToHistory(`log(${inputValue}) = ${result}`);
+        }
+      } catch (e) {
+        setDisplay("Error");
+      }
+      return;
+    }
+
+    if (nextOperator === "ln") {
+      try {
+        const result = Math.log(inputValue);
+        if (isNaN(result) || !isFinite(result)) {
+          setDisplay("Error");
+        } else {
+          setDisplay(String(result));
+          addToHistory(`ln(${inputValue}) = ${result}`);
+        }
+      } catch (e) {
+        setDisplay("Error");
+      }
+      return;
+    }
 
     if (nextOperator === "x²") {
       const result = inputValue * inputValue;
       setDisplay(String(result));
       addToHistory(`${inputValue}² = ${result}`);
+      return;
+    }
+
+    if (nextOperator === "x³") {
+      const result = inputValue * inputValue * inputValue;
+      setDisplay(String(result));
+      addToHistory(`${inputValue}³ = ${result}`);
       return;
     }
 
@@ -127,6 +198,16 @@ const Calculator = () => {
         setDisplay(String(result));
         addToHistory(`1/${inputValue} = ${result}`);
       }
+      return;
+    }
+
+    if (nextOperator === "π") {
+      setDisplay(String(Math.PI));
+      return;
+    }
+
+    if (nextOperator === "e") {
+      setDisplay(String(Math.E));
       return;
     }
 
@@ -174,24 +255,6 @@ const Calculator = () => {
 
   const clearHistory = () => {
     setHistory([]);
-  };
-
-  const handleMemoryClear = () => {
-    setMemory(null);
-  };
-
-  const handleMemoryRecall = () => {
-    if (memory !== null) {
-      setDisplay(String(memory));
-    }
-  };
-
-  const handleMemoryAdd = () => {
-    setMemory((prev) => (prev || 0) + parseFloat(display));
-  };
-
-  const handleMemorySubtract = () => {
-    setMemory((prev) => (prev || 0) - parseFloat(display));
   };
 
   const handleUnitConversion = () => {
@@ -251,34 +314,6 @@ const Calculator = () => {
       </div>
       <div className="px-2 pt-2 pb-2">
         <div className="grid grid-cols-4 gap-1 mb-2">
-          <Button 
-            onClick={handleMemoryClear} 
-            className="bg-cutelist-dark/70 hover:bg-cutelist-dark text-white"
-          >
-            MC
-          </Button>
-          <Button 
-            onClick={handleMemoryRecall} 
-            className="bg-cutelist-dark/70 hover:bg-cutelist-dark text-white"
-          >
-            MR
-          </Button>
-          <Button 
-            onClick={handleMemoryAdd} 
-            className="bg-cutelist-dark/70 hover:bg-cutelist-dark text-white"
-          >
-            M+
-          </Button>
-          <Button 
-            onClick={handleMemorySubtract} 
-            className="bg-cutelist-dark/70 hover:bg-cutelist-dark text-white"
-          >
-            M-
-          </Button>
-        </div>
-      </div>
-      <div className="px-2 pb-3">
-        <div className="grid grid-cols-4 gap-1 mb-1">
           <Button 
             onClick={() => clearDisplay()} 
             className="bg-red-500/70 hover:bg-red-500 text-white font-bold"
@@ -429,10 +464,10 @@ const Calculator = () => {
         </Button>
         
         <Button 
-          onClick={handleMemoryClear} 
+          onClick={() => performOperation("sin")} 
           className="bg-cutelist-dark/70 hover:bg-cutelist-dark text-white text-sm"
         >
-          MC
+          sin
         </Button>
         <Button 
           onClick={() => inputDigit("7")} 
@@ -460,10 +495,10 @@ const Calculator = () => {
         </Button>
         
         <Button 
-          onClick={handleMemoryRecall} 
+          onClick={() => performOperation("cos")} 
           className="bg-cutelist-dark/70 hover:bg-cutelist-dark text-white text-sm"
         >
-          MR
+          cos
         </Button>
         <Button 
           onClick={() => inputDigit("4")} 
@@ -491,10 +526,10 @@ const Calculator = () => {
         </Button>
         
         <Button 
-          onClick={handleMemoryAdd} 
+          onClick={() => performOperation("tan")} 
           className="bg-cutelist-dark/70 hover:bg-cutelist-dark text-white text-sm"
         >
-          M+
+          tan
         </Button>
         <Button 
           onClick={() => inputDigit("1")} 
@@ -522,10 +557,10 @@ const Calculator = () => {
         </Button>
         
         <Button 
-          onClick={handleMemorySubtract} 
+          onClick={() => performOperation("log")} 
           className="bg-cutelist-dark/70 hover:bg-cutelist-dark text-white text-sm"
         >
-          M-
+          log
         </Button>
         <Button 
           onClick={() => performOperation("±")} 
@@ -559,30 +594,28 @@ const Calculator = () => {
           x²
         </Button>
         <Button 
-          onClick={() => performOperation("1/x")} 
+          onClick={() => performOperation("x³")} 
           className="bg-cutelist-dark/70 hover:bg-cutelist-dark text-white"
         >
-          1/x
+          x³
         </Button>
         <Button 
-          onClick={() => {}} 
+          onClick={() => performOperation("ln")} 
           className="bg-cutelist-dark/70 hover:bg-cutelist-dark text-white"
-          disabled
+        >
+          ln
+        </Button>
+        <Button 
+          onClick={() => performOperation("π")} 
+          className="bg-cutelist-dark/70 hover:bg-cutelist-dark text-white"
         >
           π
         </Button>
         <Button 
-          onClick={() => {}} 
+          onClick={() => performOperation("e")} 
           className="bg-cutelist-dark/70 hover:bg-cutelist-dark text-white"
-          disabled
         >
           e
-        </Button>
-        <Button 
-          onClick={clearHistory} 
-          className="bg-cutelist-dark/70 hover:bg-cutelist-dark text-white"
-        >
-          CL
         </Button>
       </div>
     </div>
@@ -663,11 +696,11 @@ const Calculator = () => {
     <ThemeProvider>
       <div className="min-h-screen flex flex-col bg-cutelist-dark">
         <Header />
-        <main className="flex-1 container flex flex-col items-center py-12">
-          <div className="w-full max-w-2xl px-4">
+        <main className="flex-1 container flex flex-col items-center py-8 md:py-12 px-4">
+          <div className="w-full max-w-2xl">
             <div className="flex flex-col items-center">
               <h1 className="text-4xl font-bold text-center mb-2 text-gradient">Calculator</h1>
-              <p className="text-center text-gray-400 mb-8">A powerful and cute calculator</p>
+              <p className="text-center text-gray-400 mb-6">A powerful and cute calculator</p>
               
               <div className="w-full mb-6">
                 <Tabs 
@@ -701,6 +734,16 @@ const Calculator = () => {
                                     {item}
                                   </div>
                                 ))}
+                                <div className="pt-2">
+                                  <Button 
+                                    variant="ghost" 
+                                    size="sm" 
+                                    onClick={clearHistory}
+                                    className="text-xs"
+                                  >
+                                    Clear History
+                                  </Button>
+                                </div>
                               </div>
                             )}
                           </CardContent>
@@ -729,6 +772,16 @@ const Calculator = () => {
                                     {item}
                                   </div>
                                 ))}
+                                <div className="pt-2">
+                                  <Button 
+                                    variant="ghost" 
+                                    size="sm" 
+                                    onClick={clearHistory}
+                                    className="text-xs"
+                                  >
+                                    Clear History
+                                  </Button>
+                                </div>
                               </div>
                             )}
                           </CardContent>

@@ -8,7 +8,6 @@ import { AuthProvider } from "@/contexts/AuthContext";
 import Index from "./pages/Index";
 import Contact from "./pages/Contact";
 import NotFound from "./pages/NotFound";
-import KindLove from "./pages/KindLove";
 import Books from "./pages/Books";
 import CalendarPage from "./pages/Calendar";
 import Calculator from "./pages/Calculator";
@@ -52,7 +51,6 @@ const App = () => {
               <Route path="/calculator" element={<Calculator />} />
               <Route path="/pomodoro" element={<Pomodoro />} />
               <Route path="/notes" element={<Notes />} />
-              <Route path="/kindlove" element={<KindLove />} />
               <Route path="/contact" element={<Contact />} />
               <Route path="/profile" element={<Profile />} />
               <Route path="/achievements" element={<Achievements />} />

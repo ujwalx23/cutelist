@@ -13,13 +13,6 @@ const Index = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   
-  useEffect(() => {
-    // Redirect to auth page if not signed in
-    if (!user) {
-      navigate("/auth");
-    }
-  }, [user, navigate]);
-
   return (
     <ThemeProvider>
       <div className="min-h-screen flex flex-col bg-cutelist-dark">

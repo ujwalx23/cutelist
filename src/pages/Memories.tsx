@@ -1,10 +1,11 @@
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Header } from "@/components/Header";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { useNavigate } from "react-router-dom";
 import {
   Card,
   CardContent,
@@ -30,7 +31,6 @@ import {
   Tag,
   MessageSquare,
   Quote,
-  Send
 } from "lucide-react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Label } from "@/components/ui/label";
@@ -46,7 +46,6 @@ interface Memory {
   description: string;
   image_url: string;
   tags: string[];
-  mood: string;
   created_at: string;
 }
 
@@ -61,6 +60,7 @@ interface Quote {
 const Memories = () => {
   const { user } = useAuth();
   const { toast } = useToast();
+  const navigate = useNavigate();
   const queryClient = useQueryClient();
   const isMobile = useIsMobile();
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -78,7 +78,6 @@ const Memories = () => {
     description: "",
     image: null as File | null,
     tags: "",
-    mood: "happy",
   });
   const [newQuote, setNewQuote] = useState({
     content: "",
@@ -86,16 +85,34 @@ const Memories = () => {
   });
   const [favorites, setFavorites] = useState<string[]>([]);
 
+  // Check authentication
+  useEffect(() => {
+    if (!user) {
+      toast({
+        title: "Authentication Required",
+        description: "Please sign in to access memories and quotes.",
+        variant: "destructive",
+      });
+      navigate("/");
+    }
+  }, [user, navigate, toast]);
+
   // Fetch memories
-  const { data: memories, isLoading: isLoadingMemories } = useQuery({
+  const { data: memories = [], isLoading: isLoadingMemories, refetch: refetchMemories } = useQuery({
     queryKey: ['memories', user?.id],
     queryFn: async () => {
       if (!user) return [];
       
       try {
-        // In a real implementation, we would fetch from Supabase
-        // This is a placeholder for demonstration
-        return []; // Return empty array by default instead of dummy data
+        // Implementing actual Supabase fetch
+        const { data: memoriesData, error } = await supabase
+          .from('memories')
+          .select('*')
+          .eq('user_id', user.id)
+          .order('created_at', { ascending: false });
+        
+        if (error) throw error;
+        return memoriesData || [];
       } catch (error) {
         console.error("Error fetching memories:", error);
         return [];
@@ -105,15 +122,19 @@ const Memories = () => {
   });
 
   // Fetch quotes
-  const { data: quotes, isLoading: isLoadingQuotes } = useQuery({
+  const { data: quotes = [], isLoading: isLoadingQuotes, refetch: refetchQuotes } = useQuery({
     queryKey: ['quotes', user?.id],
     queryFn: async () => {
       if (!user) return [];
       
       try {
-        // In a real implementation, we would fetch quotes from Supabase
-        // This is a placeholder for demonstration
-        return []; // Return empty array by default instead of dummy data
+        const { data: quotesData, error } = await supabase
+          .from('quotes')
+          .select('*')
+          .order('created_at', { ascending: false });
+        
+        if (error) throw error;
+        return quotesData || [];
       } catch (error) {
         console.error("Error fetching quotes:", error);
         return [];
@@ -137,17 +158,22 @@ const Memories = () => {
         
         setUploadProgress(30);
         
-        // This is a placeholder for the actual upload
-        // In a real implementation, we would upload to Supabase storage
-        console.log("Would upload file:", fileName);
+        // Actual upload to Supabase storage
+        const { error: uploadError, data: uploadData } = await supabase.storage
+          .from('memories')
+          .upload(fileName, memoryData.image);
         
-        // Simulate upload progress
-        await new Promise(resolve => setTimeout(resolve, 500));
+        if (uploadError) throw uploadError;
+        
         setUploadProgress(60);
-        await new Promise(resolve => setTimeout(resolve, 500));
-        setUploadProgress(90);
         
-        imageUrl = URL.createObjectURL(memoryData.image);
+        // Get public URL
+        const { data } = supabase.storage
+          .from('memories')
+          .getPublicUrl(fileName);
+        
+        imageUrl = data.publicUrl;
+        setUploadProgress(90);
       }
       
       setUploadProgress(100);
@@ -155,28 +181,25 @@ const Memories = () => {
       // Convert tags string to array
       const tagsArray = memoryData.tags.split(',').map(tag => tag.trim()).filter(Boolean);
       
-      // Create a new memory object
-      const newMemoryRecord: Omit<Memory, "id"> = {
-        user_id: user.id,
-        title: memoryData.title,
-        description: memoryData.description,
-        image_url: imageUrl,
-        tags: tagsArray,
-        mood: memoryData.mood,
-        created_at: new Date().toISOString(),
-      };
+      // Create a new memory record in Supabase
+      const { data: newMemoryData, error } = await supabase
+        .from('memories')
+        .insert([{
+          user_id: user.id,
+          title: memoryData.title,
+          description: memoryData.description,
+          image_url: imageUrl,
+          tags: tagsArray,
+        }])
+        .select();
       
-      // In a real implementation, we would insert into Supabase
-      console.log("Would create memory:", newMemoryRecord);
+      if (error) throw error;
       
-      // Return a mock response with an id
-      return {
-        ...newMemoryRecord,
-        id: Date.now().toString(),
-      };
+      return newMemoryData[0];
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({queryKey: ['memories']});
+      queryClient.invalidateQueries({queryKey: ['memories', user?.id]});
+      refetchMemories();
       toast({
         title: "Memory Created",
         description: "Your memory has been stored successfully.",
@@ -189,7 +212,6 @@ const Memories = () => {
         description: "",
         image: null,
         tags: "",
-        mood: "happy",
       });
     },
     onError: (error) => {
@@ -207,25 +229,23 @@ const Memories = () => {
     mutationFn: async (quoteData: typeof newQuote) => {
       if (!user) throw new Error("User not authenticated");
       
-      // Create a new quote object
-      const newQuoteRecord: Omit<Quote, "id" | "created_at"> = {
-        user_id: user.id,
-        content: quoteData.content,
-        author: quoteData.author,
-      };
+      // Create a new quote in Supabase
+      const { data: newQuoteData, error } = await supabase
+        .from('quotes')
+        .insert([{
+          user_id: user.id,
+          content: quoteData.content,
+          author: quoteData.author || null,
+        }])
+        .select();
       
-      // In a real implementation, we would insert into Supabase
-      console.log("Would create quote:", newQuoteRecord);
+      if (error) throw error;
       
-      // Return a mock response with an id
-      return {
-        ...newQuoteRecord,
-        id: Date.now().toString(),
-        created_at: new Date().toISOString(),
-      };
+      return newQuoteData[0];
     },
     onSuccess: () => {
       queryClient.invalidateQueries({queryKey: ['quotes']});
+      refetchQuotes();
       toast({
         title: "Quote Added",
         description: "Your inspirational quote has been added successfully.",
@@ -250,13 +270,19 @@ const Memories = () => {
     mutationFn: async (memoryId: string) => {
       if (!user) throw new Error("User not authenticated");
       
-      // In a real implementation, we would delete from Supabase
-      console.log("Would delete memory:", memoryId);
+      const { error } = await supabase
+        .from('memories')
+        .delete()
+        .eq('id', memoryId)
+        .eq('user_id', user.id);
+      
+      if (error) throw error;
       
       return { success: true };
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({queryKey: ['memories']});
+      queryClient.invalidateQueries({queryKey: ['memories', user?.id]});
+      refetchMemories();
       toast({
         title: "Memory Deleted",
         description: "Your memory has been deleted successfully.",
@@ -278,13 +304,19 @@ const Memories = () => {
     mutationFn: async (quoteId: string) => {
       if (!user) throw new Error("User not authenticated");
       
-      // In a real implementation, we would delete from Supabase
-      console.log("Would delete quote:", quoteId);
+      const { error } = await supabase
+        .from('quotes')
+        .delete()
+        .eq('id', quoteId)
+        .eq('user_id', user.id);
+      
+      if (error) throw error;
       
       return { success: true };
     },
     onSuccess: () => {
       queryClient.invalidateQueries({queryKey: ['quotes']});
+      refetchQuotes();
       toast({
         title: "Quote Deleted",
         description: "Your quote has been deleted successfully.",
@@ -314,6 +346,15 @@ const Memories = () => {
   };
 
   const handleCreateMemory = () => {
+    if (!user) {
+      toast({
+        title: "Authentication Required",
+        description: "Please sign in to create memories.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     if (!newMemory.title.trim()) {
       toast({
         title: "Title Required",
@@ -327,6 +368,15 @@ const Memories = () => {
   };
 
   const handleCreateQuote = () => {
+    if (!user) {
+      toast({
+        title: "Authentication Required",
+        description: "Please sign in to add quotes.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     if (!newQuote.content.trim()) {
       toast({
         title: "Content Required",
@@ -353,23 +403,6 @@ const Memories = () => {
       setFavorites(favorites.filter(fav => fav !== id));
     } else {
       setFavorites([...favorites, id]);
-    }
-  };
-
-  const getMoodIcon = (mood: string) => {
-    switch (mood) {
-      case "happy":
-        return "😊";
-      case "excited":
-        return "🎉";
-      case "relaxed":
-        return "😌";
-      case "sad":
-        return "😢";
-      case "angry":
-        return "😡";
-      default:
-        return "😐";
     }
   };
 
@@ -407,7 +440,6 @@ const Memories = () => {
         <CardHeader className="p-4">
           <div className="flex items-center justify-between">
             <CardTitle className="text-lg line-clamp-1">{memory.title}</CardTitle>
-            <div className="text-xl">{getMoodIcon(memory.mood)}</div>
           </div>
           <CardDescription className="line-clamp-1 flex items-center">
             <CalendarIcon className="h-3 w-3 mr-1" />
@@ -419,7 +451,7 @@ const Memories = () => {
         </CardContent>
         <CardFooter className="p-4 pt-0">
           <div className="flex flex-wrap gap-1">
-            {memory.tags.map((tag, i) => (
+            {memory.tags && memory.tags.map((tag, i) => (
               <span 
                 key={i} 
                 className="text-xs px-2 py-1 bg-cutelist-primary/20 text-cutelist-primary rounded-full"
@@ -439,19 +471,21 @@ const Memories = () => {
         <CardHeader className="p-4">
           <div className="flex justify-between items-start">
             <Quote className="h-6 w-6 text-cutelist-primary/80" />
-            <Button 
-              variant="ghost" 
-              size="icon" 
-              className="h-8 w-8 text-gray-400 hover:text-red-500"
-              onClick={() => deleteQuoteMutation.mutate(quote.id)}
-            >
-              <Trash2 className="h-4 w-4" />
-            </Button>
+            {quote.user_id === user?.id && (
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                className="h-8 w-8 text-gray-400 hover:text-red-500"
+                onClick={() => deleteQuoteMutation.mutate(quote.id)}
+              >
+                <Trash2 className="h-4 w-4" />
+              </Button>
+            )}
           </div>
         </CardHeader>
         <CardContent className="p-4 pt-0">
           <p className="text-lg italic mb-2">"{quote.content}"</p>
-          <p className="text-sm text-gray-400 text-right">— {quote.author}</p>
+          <p className="text-sm text-gray-400 text-right">— {quote.author || "Unknown"}</p>
         </CardContent>
         <CardFooter className="p-4 pt-0 text-xs text-gray-500 flex justify-between">
           <span>{format(new Date(quote.created_at), "MMM d, yyyy")}</span>
@@ -503,23 +537,19 @@ const Memories = () => {
           <p className="text-gray-400 text-sm mb-4">
             Share your favorite quotes, affirmations, or words of wisdom with the community.
           </p>
-          {user ? (
-            <div className="flex gap-2">
-              <Button
-                onClick={() => setIsAddQuoteModalOpen(true)}
-                size={isMobile ? "sm" : "default"}
-                className="flex items-center gap-2"
-              >
-                <PlusCircle className="h-4 w-4" />
-                Add Quote
-              </Button>
-            </div>
-          ) : (
-            <p className="text-sm text-cutelist-primary">Sign in to share quotes</p>
-          )}
+          <div className="flex gap-2">
+            <Button
+              onClick={() => setIsAddQuoteModalOpen(true)}
+              size={isMobile ? "sm" : "default"}
+              className="flex items-center gap-2"
+            >
+              <PlusCircle className="h-4 w-4" />
+              Add Quote
+            </Button>
+          </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {isLoadingQuotes ? (
             Array(3).fill(0).map((_, i) => (
               <Card key={i} className="opacity-50">
@@ -552,6 +582,30 @@ const Memories = () => {
     );
   };
 
+  // If not authenticated, show a sign-in prompt
+  if (!user) {
+    return (
+      <ThemeProvider>
+        <div className="min-h-screen flex flex-col bg-cutelist-dark">
+          <Header />
+          <main className="flex-1 container py-12 flex items-center justify-center">
+            <Card className="w-full max-w-md">
+              <CardHeader>
+                <CardTitle>Sign in Required</CardTitle>
+                <CardDescription>Please sign in to access memories and quotes</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <Button className="w-full" onClick={() => navigate("/")}>
+                  Go to Sign In
+                </Button>
+              </CardContent>
+            </Card>
+          </main>
+        </div>
+      </ThemeProvider>
+    );
+  }
+
   return (
     <ThemeProvider>
       <div className="min-h-screen flex flex-col bg-cutelist-dark">
@@ -564,7 +618,7 @@ const Memories = () => {
                 <p className="text-gray-400">Capture your precious moments and share inspiring quotes</p>
               </div>
               <div className="flex gap-3 mt-4 md:mt-0">
-                {viewType === "memories" && user && (
+                {viewType === "memories" && (
                   <Button
                     onClick={() => setIsAddModalOpen(true)}
                     className="flex items-center gap-2"
@@ -573,7 +627,7 @@ const Memories = () => {
                     Create Memory
                   </Button>
                 )}
-                {viewType === "quotes" && user && (
+                {viewType === "quotes" && (
                   <Button
                     onClick={() => setIsAddQuoteModalOpen(true)}
                     className="flex items-center gap-2"
@@ -651,22 +705,6 @@ const Memories = () => {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label>Mood</Label>
-                  <div className="flex flex-wrap gap-2">
-                    {["happy", "excited", "relaxed", "sad", "angry"].map((mood) => (
-                      <Button
-                        key={mood}
-                        type="button"
-                        variant={newMemory.mood === mood ? "default" : "outline"}
-                        className="flex-1"
-                        onClick={() => setNewMemory({ ...newMemory, mood })}
-                      >
-                        {getMoodIcon(mood)} <span className="ml-1 capitalize">{mood}</span>
-                      </Button>
-                    ))}
-                  </div>
-                </div>
-                <div className="space-y-2">
                   <Label htmlFor="tags">Tags</Label>
                   <div className="flex items-center">
                     <AtSign className="mr-2 h-4 w-4 text-gray-500" />
@@ -740,7 +778,6 @@ const Memories = () => {
                     description: "",
                     image: null,
                     tags: "",
-                    mood: "happy",
                   });
                 }}
                 disabled={uploadProgress > 0 && uploadProgress < 100}
@@ -810,7 +847,6 @@ const Memories = () => {
                   <div className="flex items-center justify-between mb-4">
                     <h2 className="text-2xl font-bold flex items-center">
                       {activeMemory.title}
-                      <span className="ml-2 text-2xl">{getMoodIcon(activeMemory.mood)}</span>
                     </h2>
                     <div className="text-sm text-gray-400 flex items-center">
                       <CalendarIcon className="h-3 w-3 mr-1" />
@@ -820,7 +856,7 @@ const Memories = () => {
                   
                   <p className="text-gray-300 mb-6">{activeMemory.description}</p>
                   
-                  {activeMemory.tags.length > 0 && (
+                  {activeMemory.tags && activeMemory.tags.length > 0 && (
                     <div className="mb-4">
                       <div className="flex items-center gap-2 mb-2">
                         <Tag className="h-4 w-4" />

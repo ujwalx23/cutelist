@@ -13,7 +13,7 @@ export function QuotesList() {
   const { user } = useAuth();
   const { toast } = useToast();
 
-  const { data: quotes = [], refetch } = useQuery({
+  const { data: quotes = [], refetch, isLoading } = useQuery({
     queryKey: ['quotes'],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -21,9 +21,13 @@ export function QuotesList() {
         .select('*')
         .order('created_at', { ascending: false });
       
-      if (error) throw error;
-      return data;
+      if (error) {
+        console.error("Error fetching quotes:", error);
+        throw error;
+      }
+      return data || [];
     },
+    refetchOnWindowFocus: false,
   });
 
   const onQuoteAdded = () => {
@@ -49,15 +53,32 @@ export function QuotesList() {
         </div>
       )}
       
-      <div className="space-y-4">
-        {quotes.map((quote) => (
-          <Card key={quote.id} className="bg-background/60 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-            <CardContent className="pt-6">
-              <p className="text-lg text-center italic">"{quote.content}"</p>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
+      {isLoading ? (
+        <div className="space-y-4">
+          {[1, 2, 3].map(i => (
+            <Card key={i} className="bg-background/60 backdrop-blur supports-[backdrop-filter]:bg-background/60 animate-pulse">
+              <CardContent className="pt-6 h-24" />
+            </Card>
+          ))}
+        </div>
+      ) : quotes.length > 0 ? (
+        <div className="space-y-4">
+          {quotes.map((quote) => (
+            <Card key={quote.id} className="bg-background/60 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+              <CardContent className="pt-6">
+                <p className="text-lg text-center italic">"{quote.content}"</p>
+                {quote.author && (
+                  <p className="text-sm text-right text-gray-400 mt-2">— {quote.author}</p>
+                )}
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      ) : (
+        <div className="text-center py-8">
+          <p className="text-gray-400">No quotes yet. Be the first to add one!</p>
+        </div>
+      )}
     </div>
   );
 }

@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Header } from "@/components/Header";
@@ -11,12 +12,20 @@ import { Label } from "@/components/ui/label";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { User } from "lucide-react";
+import { User, CheckCircle2, Book, Calendar as CalendarIcon, ClipboardCheck } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
 
 interface ProfileData {
   username: string | null;
   bio: string | null;
   avatar_url: string | null;
+}
+
+interface UserStats {
+  completedTasks: number;
+  totalTasks: number;
+  quotes: number;
+  memories: number;
 }
 
 const Profile = () => {
@@ -28,6 +37,46 @@ const Profile = () => {
     username: "",
     bio: "",
     avatar_url: "",
+  });
+
+  // Fetch user statistics
+  const { data: userStats = { completedTasks: 0, totalTasks: 0, quotes: 0, memories: 0 }, isLoading: statsLoading } = useQuery({
+    queryKey: ['userStats', user?.id],
+    queryFn: async () => {
+      if (!user) return { completedTasks: 0, totalTasks: 0, quotes: 0, memories: 0 };
+      
+      try {
+        // Fetch completed tasks count
+        const { data: todosData, error: todosError } = await supabase
+          .from("todos")
+          .select("*", { count: "exact" })
+          .eq("user_id", user.id);
+          
+        if (todosError) throw todosError;
+        
+        const completedTasks = todosData ? todosData.filter(todo => todo.is_complete).length : 0;
+        const totalTasks = todosData ? todosData.length : 0;
+        
+        // Fetch quotes count
+        const { count: quotesCount, error: quotesError } = await supabase
+          .from("quotes")
+          .select("*", { count: "exact", head: true })
+          .eq("user_id", user.id);
+          
+        if (quotesError) throw quotesError;
+        
+        return {
+          completedTasks,
+          totalTasks,
+          quotes: quotesCount || 0,
+          memories: 0, // Placeholder as memories table doesn't exist yet
+        };
+      } catch (error) {
+        console.error("Error fetching user stats:", error);
+        return { completedTasks: 0, totalTasks: 0, quotes: 0, memories: 0 };
+      }
+    },
+    enabled: !!user
   });
 
   useEffect(() => {
@@ -211,14 +260,61 @@ const Profile = () => {
                 </TabsContent>
                 
                 <TabsContent value="stats" className="p-6">
-                  <div className="space-y-4">
-                    <div className="bg-cutelist-dark/50 p-4 rounded-lg">
-                      <h3 className="font-medium text-cutelist-primary">Task Statistics</h3>
-                      <p className="text-sm text-gray-300 mt-1">Coming soon! Track your productivity stats.</p>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="bg-cutelist-dark/50 p-4 rounded-lg flex items-start">
+                      <div className="bg-cutelist-primary/20 p-2 rounded-full mr-3">
+                        <CheckCircle2 className="h-5 w-5 text-cutelist-primary" />
+                      </div>
+                      <div>
+                        <h3 className="font-medium text-cutelist-primary">Completed Tasks</h3>
+                        <p className="text-3xl font-bold mt-1">{statsLoading ? "..." : userStats.completedTasks}</p>
+                        <p className="text-sm text-gray-300 mt-1">
+                          {statsLoading ? "Loading..." : `out of ${userStats.totalTasks} total tasks`}
+                        </p>
+                      </div>
                     </div>
-                    <div className="bg-cutelist-dark/50 p-4 rounded-lg">
-                      <h3 className="font-medium text-cutelist-primary">App Usage</h3>
-                      <p className="text-sm text-gray-300 mt-1">Coming soon! See your app usage patterns.</p>
+                    
+                    <div className="bg-cutelist-dark/50 p-4 rounded-lg flex items-start">
+                      <div className="bg-cutelist-primary/20 p-2 rounded-full mr-3">
+                        <ClipboardCheck className="h-5 w-5 text-cutelist-primary" />
+                      </div>
+                      <div>
+                        <h3 className="font-medium text-cutelist-primary">Completion Rate</h3>
+                        <p className="text-3xl font-bold mt-1">
+                          {statsLoading ? "..." : userStats.totalTasks > 0 
+                            ? `${Math.round((userStats.completedTasks / userStats.totalTasks) * 100)}%` 
+                            : "0%"}
+                        </p>
+                        <p className="text-sm text-gray-300 mt-1">
+                          Task completion percentage
+                        </p>
+                      </div>
+                    </div>
+                    
+                    <div className="bg-cutelist-dark/50 p-4 rounded-lg flex items-start">
+                      <div className="bg-cutelist-primary/20 p-2 rounded-full mr-3">
+                        <Book className="h-5 w-5 text-cutelist-primary" />
+                      </div>
+                      <div>
+                        <h3 className="font-medium text-cutelist-primary">Quotes Shared</h3>
+                        <p className="text-3xl font-bold mt-1">{statsLoading ? "..." : userStats.quotes}</p>
+                        <p className="text-sm text-gray-300 mt-1">
+                          Inspirational quotes you've added
+                        </p>
+                      </div>
+                    </div>
+                    
+                    <div className="bg-cutelist-dark/50 p-4 rounded-lg flex items-start">
+                      <div className="bg-cutelist-primary/20 p-2 rounded-full mr-3">
+                        <CalendarIcon className="h-5 w-5 text-cutelist-primary" />
+                      </div>
+                      <div>
+                        <h3 className="font-medium text-cutelist-primary">Active Days</h3>
+                        <p className="text-3xl font-bold mt-1">Coming Soon</p>
+                        <p className="text-sm text-gray-300 mt-1">
+                          Days you've been active on the app
+                        </p>
+                      </div>
                     </div>
                   </div>
                 </TabsContent>

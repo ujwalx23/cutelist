@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -92,9 +91,6 @@ export function Header() {
         <Heart className="h-4 w-4 mr-1" />
         <span className="hidden md:inline">Memories</span>
       </Link>
-      <Link to="/kindlove" className="text-sm font-medium hover:text-primary">
-        KindLove
-      </Link>
       <Link to="/contact" className="text-sm font-medium hover:text-primary">
         Contact
       </Link>
@@ -141,9 +137,6 @@ export function Header() {
           <Link to="/memories" className="flex items-center space-x-2 px-2 py-2 hover:bg-white/5 rounded-md">
             <Heart className="h-5 w-5" />
             <span>Memories</span>
-          </Link>
-          <Link to="/kindlove" className="flex items-center space-x-2 px-2 py-2 hover:bg-white/5 rounded-md">
-            <span>KindLove</span>
           </Link>
           <Link to="/contact" className="flex items-center space-x-2 px-2 py-2 hover:bg-white/5 rounded-md">
             <span>Contact</span>

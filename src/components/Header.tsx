@@ -20,7 +20,9 @@ import {
   Calculator, 
   Clock, 
   FileText,
-  Menu
+  Menu,
+  Trophy,
+  Heart
 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -82,6 +84,14 @@ export function Header() {
         <FileText className="h-4 w-4 mr-1" />
         <span className="hidden md:inline">Notes</span>
       </Link>
+      <Link to="/achievements" className="text-sm flex items-center font-medium hover:text-primary">
+        <Trophy className="h-4 w-4 mr-1" />
+        <span className="hidden md:inline">Achievements</span>
+      </Link>
+      <Link to="/memories" className="text-sm flex items-center font-medium hover:text-primary">
+        <Heart className="h-4 w-4 mr-1" />
+        <span className="hidden md:inline">Memories</span>
+      </Link>
       <Link to="/kindlove" className="text-sm font-medium hover:text-primary">
         KindLove
       </Link>
@@ -123,6 +133,14 @@ export function Header() {
           <Link to="/notes" className="flex items-center space-x-2 px-2 py-2 hover:bg-white/5 rounded-md">
             <FileText className="h-5 w-5" />
             <span>Notes</span>
+          </Link>
+          <Link to="/achievements" className="flex items-center space-x-2 px-2 py-2 hover:bg-white/5 rounded-md">
+            <Trophy className="h-5 w-5" />
+            <span>Achievements</span>
+          </Link>
+          <Link to="/memories" className="flex items-center space-x-2 px-2 py-2 hover:bg-white/5 rounded-md">
+            <Heart className="h-5 w-5" />
+            <span>Memories</span>
           </Link>
           <Link to="/kindlove" className="flex items-center space-x-2 px-2 py-2 hover:bg-white/5 rounded-md">
             <span>KindLove</span>

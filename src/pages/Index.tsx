@@ -1,9 +1,41 @@
 
+import { useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { Header } from "@/components/Header";
 import { TaskContainer } from "@/components/TaskContainer";
 import { ThemeProvider } from "@/components/ThemeProvider";
+import { useAuth } from "@/contexts/AuthContext";
+import { useToast } from "@/hooks/use-toast";
+import { Button } from "@/components/ui/button";
 
 const Index = () => {
+  const { user } = useAuth();
+  const navigate = useNavigate();
+  const { toast } = useToast();
+  
+  useEffect(() => {
+    // Check if we've recently redirected to prevent loops
+    const hasShownToast = sessionStorage.getItem('redirectToast');
+    
+    if (!user && !hasShownToast) {
+      toast({
+        title: "Please sign in",
+        description: "You need to sign in to access all features",
+        action: (
+          <Button variant="outline" size="sm" onClick={() => navigate("/")}>
+            Dismiss
+          </Button>
+        ),
+      });
+      sessionStorage.setItem('redirectToast', 'true');
+    }
+    
+    return () => {
+      // Clear the flag when leaving the page
+      sessionStorage.removeItem('redirectToast');
+    };
+  }, [user, navigate, toast]);
+
   return (
     <ThemeProvider>
       <div className="min-h-screen flex flex-col bg-cutelist-dark">
@@ -13,7 +45,19 @@ const Index = () => {
             <div className="flex flex-col items-center">
               <h1 className="text-4xl font-bold text-center mb-2 text-gradient">Welcome to CuteList</h1>
               <p className="text-center text-gray-400 mb-8">Manage your tasks in the cutest way possible</p>
-              <TaskContainer />
+              {!user ? (
+                <div className="text-center mb-8">
+                  <p className="mb-4 text-gray-300">Sign in to create and manage your tasks</p>
+                  <Button 
+                    onClick={() => navigate("/auth")}
+                    className="px-8"
+                  >
+                    Sign In
+                  </Button>
+                </div>
+              ) : (
+                <TaskContainer />
+              )}
             </div>
           </div>
         </main>

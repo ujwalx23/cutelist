@@ -1,0 +1,75 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="icon" href="/lovable-uploads/cd11890b-c610-464d-b694-2b59ee09a21d.png" type="image/png">
+  <link rel="apple-touch-icon" href="/lovable-uploads/cd11890b-c610-464d-b694-2b59ee09a21d.png">
+  <title>CuteList</title>
+  <meta name="description" content="Your adorable task manager and productivity app">
+  <meta name="theme-color" content="#9b87f5">
+  <link rel="manifest" href="/manifest.json">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <style>
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    .loading-container {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background: #1A1F2C;
+      z-index: 9999;
+    }
+
+    .loading-spinner {
+      width: 50px;
+      height: 50px;
+      border: 3px solid rgba(155, 135, 245, 0.3);
+      border-radius: 50%;
+      border-top-color: #9b87f5;
+      animation: spin 1s ease-in-out infinite;
+    }
+  </style>
+</head>
+<body>
+  <div id="root">
+    <div class="loading-container">
+      <div class="loading-spinner"></div>
+    </div>
+  </div>
+  <script>
+    // Register service worker for PWA support
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/service-worker.js')
+          .then((registration) => {
+            console.log('ServiceWorker registration successful with scope: ', registration.scope);
+          })
+          .catch((error) => {
+            console.log('ServiceWorker registration failed: ', error);
+          });
+      });
+    }
+
+    // Handle offline/online events
+    window.addEventListener('online', function() {
+      document.dispatchEvent(new CustomEvent('network-status-change', { detail: { online: true } }));
+    });
+
+    window.addEventListener('offline', function() {
+      document.dispatchEvent(new CustomEvent('network-status-change', { detail: { online: false } }));
+    });
+  </script>
+  <script type="module" src="/src/main.tsx"></script>
+</body>
+</html>

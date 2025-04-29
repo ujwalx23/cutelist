@@ -1,35 +1,28 @@
 
-const CACHE_NAME = 'cutelist-v1';
+const CACHE_NAME = 'cutelist-v2';
 const urlsToCache = [
   '/',
   '/index.html',
   '/manifest.json',
-  '/lovable-uploads/cd11890b-c610-464d-b694-2b59ee09a21d.png'
+  '/lovable-uploads/cd11890b-c610-464d-b694-2b59ee09a21d.png',
+  '/assets/index-*.js',
+  '/assets/index-*.css'
 ];
 
+// Install event - cache assets
 self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME)
       .then((cache) => {
+        console.log('Opened cache');
         return cache.addAll(urlsToCache);
       })
   );
 });
 
-self.addEventListener('fetch', (event) => {
-  event.respondWith(
-    caches.match(event.request)
-      .then((response) => {
-        if (response) {
-          return response;
-        }
-        return fetch(event.request);
-      })
-  );
-});
-
+// Activate event - clean old caches
 self.addEventListener('activate', (event) => {
-  const cacheWhitelist = ['cutelist-v1'];
+  const cacheWhitelist = [CACHE_NAME];
   event.waitUntil(
     caches.keys().then((cacheNames) => {
       return Promise.all(
@@ -41,4 +34,83 @@ self.addEventListener('activate', (event) => {
       );
     })
   );
+});
+
+// Fetch event with network-first strategy for API requests, cache-first for assets
+self.addEventListener('fetch', (event) => {
+  const url = new URL(event.request.url);
+  
+  // For API requests (to Supabase), try network first, then fall back to offline page
+  if (url.pathname.includes('/rest/') || url.pathname.includes('/auth/')) {
+    event.respondWith(
+      fetch(event.request)
+        .catch(() => {
+          return caches.match('/offline.html') || caches.match('/');
+        })
+    );
+    return;
+  }
+
+  // For all other requests, try cache first, then network
+  event.respondWith(
+    caches.match(event.request)
+      .then((response) => {
+        // Cache hit - return response
+        if (response) {
+          return response;
+        }
+        
+        // Clone the request because it's a one-time use stream
+        const fetchRequest = event.request.clone();
+
+        return fetch(fetchRequest).then(
+          (response) => {
+            // Check if we received a valid response
+            if (!response || response.status !== 200 || response.type !== 'basic') {
+              return response;
+            }
+
+            // Clone the response because it's a one-time use stream
+            const responseToCache = response.clone();
+
+            caches.open(CACHE_NAME)
+              .then((cache) => {
+                cache.put(event.request, responseToCache);
+              });
+
+            return response;
+          }
+        ).catch(() => {
+          // If both cache and network fail, show offline page
+          return caches.match('/offline.html') || new Response('You are offline');
+        });
+      })
+  );
+});
+
+// Add sync event for background syncing when connection is restored
+self.addEventListener('sync', (event) => {
+  if (event.tag === 'sync-todos') {
+    event.waitUntil(syncTodos());
+  }
+});
+
+// Function to sync todos when back online
+async function syncTodos() {
+  const offlineData = await localforage.getItem('offline-todos');
+  if (!offlineData) return;
+  
+  try {
+    // Code to sync with server would go here
+    await localforage.removeItem('offline-todos');
+  } catch (error) {
+    console.error('Sync failed:', error);
+  }
+}
+
+// Listen for messages from the client
+self.addEventListener('message', (event) => {
+  if (event.data && event.data.type === 'SKIP_WAITING') {
+    self.skipWaiting();
+  }
 });

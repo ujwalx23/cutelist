@@ -28,27 +28,29 @@ const ActivityCalendar = ({
           Days with completed tasks are highlighted
         </CardDescription>
       </CardHeader>
-      <CardContent>
+      <CardContent className="overflow-x-auto pb-1">
         {isLoading ? (
           <div className="space-y-2">
             <Skeleton className="h-[200px] w-full" />
           </div>
         ) : (
-          <Calendar
-            mode="single"
-            selected={selectedDate}
-            onSelect={setSelectedDate}
-            className="w-full"
-            modifiers={{
-              highlighted: highlightedDates,
-            }}
-            modifiersStyles={{
-              highlighted: {
-                backgroundColor: "rgba(155, 135, 245, 0.2)",
-                borderRadius: "100%",
-              },
-            }}
-          />
+          <div className="min-w-[240px]">
+            <Calendar
+              mode="single"
+              selected={selectedDate}
+              onSelect={setSelectedDate}
+              className="w-full"
+              modifiers={{
+                highlighted: highlightedDates,
+              }}
+              modifiersStyles={{
+                highlighted: {
+                  backgroundColor: "rgba(155, 135, 245, 0.2)",
+                  borderRadius: "100%",
+                },
+              }}
+            />
+          </div>
         )}
       </CardContent>
     </Card>

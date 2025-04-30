@@ -8,9 +8,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { generateId } from "@/lib/utils";
-import { CalendarDays, Plus, X } from "lucide-react";
+import { CalendarDays, Plus, X, MessageCircle } from "lucide-react";
 import { format } from "date-fns";
 import { useAuth } from "@/contexts/AuthContext";
+import { useToast } from "@/hooks/use-toast";
 
 interface Event {
   id: string;
@@ -38,6 +39,7 @@ const CalendarPage = () => {
   const [newEventTitle, setNewEventTitle] = useState("");
   const [newEventDescription, setNewEventDescription] = useState("");
   const { user } = useAuth();
+  const { toast } = useToast();
 
   const addEvent = () => {
     if (!date || !newEventTitle) return;
@@ -52,10 +54,23 @@ const CalendarPage = () => {
     setEvents([...events, newEvent]);
     setNewEventTitle("");
     setNewEventDescription("");
+    
+    toast({
+      title: "Event added",
+      description: `"${newEventTitle}" has been added to your calendar.`,
+    });
   };
 
   const removeEvent = (id: string) => {
     setEvents(events.filter(event => event.id !== id));
+    toast({
+      title: "Event removed",
+      description: "The event has been removed from your calendar.",
+    });
+  };
+
+  const openChatbot = () => {
+    window.open("https://cutt.cx/wanderlust", "_blank");
   };
 
   // Filter events for the selected date
@@ -79,23 +94,23 @@ const CalendarPage = () => {
     <ThemeProvider>
       <div className="min-h-screen flex flex-col bg-cutelist-dark">
         <Header />
-        <main className="flex-1 container py-12">
+        <main className="flex-1 container py-8 md:py-12">
           <div className="max-w-6xl mx-auto px-4">
-            <div className="flex flex-col items-center mb-8">
-              <h1 className="text-4xl font-bold text-center mb-2 text-gradient">
+            <div className="flex flex-col items-center mb-6 md:mb-8">
+              <h1 className="text-3xl md:text-4xl font-bold text-center mb-2 text-gradient">
                 Calendar
               </h1>
               <p className="text-center text-gray-400 mb-6">
                 Plan your days with our cute calendar
               </p>
 
-              <div className="w-full grid grid-cols-1 lg:grid-cols-3 gap-8">
-                <div className="glass-card p-6 rounded-xl">
+              <div className="w-full grid grid-cols-1 lg:grid-cols-3 gap-6 md:gap-8">
+                <div className="glass-card p-2 md:p-6 rounded-xl overflow-hidden">
                   <Calendar
                     mode="single"
                     selected={date}
                     onSelect={setDate}
-                    className="rounded-md pointer-events-auto"
+                    className="rounded-md max-w-full"
                   />
                 </div>
 
@@ -109,8 +124,8 @@ const CalendarPage = () => {
                     
                     <TabsContent value="day" className="space-y-4">
                       <div className="flex items-center justify-between">
-                        <h2 className="text-xl font-semibold">
-                          {date ? format(date, "PPPP") : "Select a date"}
+                        <h2 className="text-lg md:text-xl font-semibold">
+                          {date ? format(date, "PPP") : "Select a date"}
                         </h2>
                       </div>
                       
@@ -268,10 +283,20 @@ const CalendarPage = () => {
             </div>
           </div>
         </main>
+        
+        {/* Chatbot button */}
+        <div className="fixed bottom-6 right-6 z-50">
+          <Button 
+            onClick={openChatbot}
+            className="rounded-full bg-cutelist-primary hover:bg-cutelist-secondary w-12 h-12 flex items-center justify-center shadow-lg"
+            aria-label="Chat with us"
+          >
+            <MessageCircle className="h-6 w-6" />
+          </Button>
+        </div>
       </div>
     </ThemeProvider>
   );
 };
 
-// Export the component as default
 export default CalendarPage;

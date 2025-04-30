@@ -1,9 +1,9 @@
-
 import { Header } from "@/components/Header";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import { Badge } from "@/components/ui/badge";
-import { Trophy } from "lucide-react";
+import { Trophy, MessageCircle } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { Button } from "@/components/ui/button"; 
 
 // Import our new components
 import ActivityCalendar from "@/components/achievements/ActivityCalendar";
@@ -28,6 +28,10 @@ const Achievements = () => {
     mostProductiveDay
   } = useAchievements();
 
+  const openChatbot = () => {
+    window.open("https://cutt.cx/wanderlust", "_blank");
+  };
+
   return (
     <ThemeProvider>
       <div className="min-h-screen flex flex-col bg-cutelist-dark">
@@ -48,50 +52,112 @@ const Achievements = () => {
             </div>
             
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-              {/* Left Column - Calendar & Stats */}
-              <div className="space-y-6 order-2 lg:order-1">
-                <ActivityCalendar 
-                  isLoading={isLoading} 
-                  selectedDate={selectedDate} 
-                  setSelectedDate={setSelectedDate} 
-                  highlightedDates={highlightedDates} 
-                />
-                
-                <StatisticsCard 
-                  isLoading={isLoading}
-                  totalCompleted={totalCompleted}
-                  todosCompleted={todosCompleted}
-                  booksCompleted={booksCompleted}
-                  pomodoroCompleted={pomodoroCompleted}
-                  mostProductiveDay={mostProductiveDay}
-                />
-              </div>
-              
-              {/* Right Column - Daily Achievements & Badges */}
-              <div className="lg:col-span-2 space-y-6 order-1 lg:order-2">
-                <DailyAchievements 
-                  isLoading={isLoading}
-                  selectedDate={selectedDate}
-                  setSelectedDate={setSelectedDate}
-                  tasksForSelectedDate={tasksForSelectedDate}
-                />
-                
-                <div className="glass-card p-5 rounded-xl">
-                  <h2 className="text-xl font-semibold mb-4">Achievement Badges</h2>
-                  <p className="text-gray-400 mb-4">Unlock badges by completing various tasks</p>
+              {/* Mobile-friendly order */}
+              {isMobile ? (
+                <>
+                  {/* Mobile Order: Stats, Daily, Calendar, Badges */}
+                  <div className="space-y-6 order-1">
+                    <StatisticsCard 
+                      isLoading={isLoading}
+                      totalCompleted={totalCompleted}
+                      todosCompleted={todosCompleted}
+                      booksCompleted={booksCompleted}
+                      pomodoroCompleted={pomodoroCompleted}
+                      mostProductiveDay={mostProductiveDay}
+                    />
+                  </div>
                   
-                  <AchievementBadgesList
-                    isLoading={isLoading}
-                    todosCompleted={todosCompleted}
-                    booksCompleted={booksCompleted}
-                    pomodoroCompleted={pomodoroCompleted}
-                    currentStreak={currentStreak}
-                  />
-                </div>
-              </div>
+                  <div className="lg:col-span-2 space-y-6 order-2">
+                    <DailyAchievements 
+                      isLoading={isLoading}
+                      selectedDate={selectedDate}
+                      setSelectedDate={setSelectedDate}
+                      tasksForSelectedDate={tasksForSelectedDate}
+                    />
+                  </div>
+                  
+                  <div className="space-y-6 order-3">
+                    <ActivityCalendar 
+                      isLoading={isLoading} 
+                      selectedDate={selectedDate} 
+                      setSelectedDate={setSelectedDate} 
+                      highlightedDates={highlightedDates} 
+                    />
+                  </div>
+                  
+                  <div className="lg:col-span-3 order-4">
+                    <div className="glass-card p-5 rounded-xl">
+                      <h2 className="text-xl font-semibold mb-4">Achievement Badges</h2>
+                      <p className="text-gray-400 mb-4">Unlock badges by completing various tasks</p>
+                      
+                      <AchievementBadgesList
+                        isLoading={isLoading}
+                        todosCompleted={todosCompleted}
+                        booksCompleted={booksCompleted}
+                        pomodoroCompleted={pomodoroCompleted}
+                        currentStreak={currentStreak}
+                      />
+                    </div>
+                  </div>
+                </>
+              ) : (
+                <>
+                  {/* Desktop layout - unchanged */}
+                  <div className="space-y-6 order-1">
+                    <ActivityCalendar 
+                      isLoading={isLoading} 
+                      selectedDate={selectedDate} 
+                      setSelectedDate={setSelectedDate} 
+                      highlightedDates={highlightedDates} 
+                    />
+                    
+                    <StatisticsCard 
+                      isLoading={isLoading}
+                      totalCompleted={totalCompleted}
+                      todosCompleted={todosCompleted}
+                      booksCompleted={booksCompleted}
+                      pomodoroCompleted={pomodoroCompleted}
+                      mostProductiveDay={mostProductiveDay}
+                    />
+                  </div>
+                  
+                  <div className="lg:col-span-2 space-y-6 order-2">
+                    <DailyAchievements 
+                      isLoading={isLoading}
+                      selectedDate={selectedDate}
+                      setSelectedDate={setSelectedDate}
+                      tasksForSelectedDate={tasksForSelectedDate}
+                    />
+                    
+                    <div className="glass-card p-5 rounded-xl">
+                      <h2 className="text-xl font-semibold mb-4">Achievement Badges</h2>
+                      <p className="text-gray-400 mb-4">Unlock badges by completing various tasks</p>
+                      
+                      <AchievementBadgesList
+                        isLoading={isLoading}
+                        todosCompleted={todosCompleted}
+                        booksCompleted={booksCompleted}
+                        pomodoroCompleted={pomodoroCompleted}
+                        currentStreak={currentStreak}
+                      />
+                    </div>
+                  </div>
+                </>
+              )}
             </div>
           </div>
         </main>
+        
+        {/* Chatbot button */}
+        <div className="fixed bottom-6 right-6 z-50">
+          <Button 
+            onClick={openChatbot}
+            className="rounded-full bg-cutelist-primary hover:bg-cutelist-secondary w-12 h-12 flex items-center justify-center shadow-lg"
+            aria-label="Chat with us"
+          >
+            <MessageCircle className="h-6 w-6" />
+          </Button>
+        </div>
       </div>
     </ThemeProvider>
   );

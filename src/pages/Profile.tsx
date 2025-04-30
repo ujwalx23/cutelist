@@ -12,7 +12,7 @@ import { Label } from "@/components/ui/label";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { User, CheckCircle2, Book, Calendar as CalendarIcon, ClipboardCheck } from "lucide-react";
+import { User, CheckCircle2, Book, Calendar as CalendarIcon, ClipboardCheck, MessageCircle } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 
 interface ProfileData {
@@ -38,6 +38,10 @@ const Profile = () => {
     bio: "",
     avatar_url: "",
   });
+
+  const openChatbot = () => {
+    window.open("https://cutt.cx/wanderlust", "_blank");
+  };
 
   // Fetch user statistics
   const { data: userStats = { completedTasks: 0, totalTasks: 0, quotes: 0, memories: 0 }, isLoading: statsLoading } = useQuery({
@@ -203,10 +207,13 @@ const Profile = () => {
                 <div className="flex justify-center mb-4">
                   <div className="relative group">
                     <Avatar className="h-24 w-24 border-4 border-cutelist-primary">
-                      <AvatarImage src={profile.avatar_url} />
-                      <AvatarFallback className="text-lg bg-cutelist-primary/30">
-                        {getInitials(user.email || "")}
-                      </AvatarFallback>
+                      {profile.avatar_url ? (
+                        <AvatarImage src={profile.avatar_url} alt="Profile picture" />
+                      ) : (
+                        <AvatarFallback className="text-lg bg-cutelist-primary/30">
+                          {getInitials(user.email || "")}
+                        </AvatarFallback>
+                      )}
                     </Avatar>
                     <label className="absolute inset-0 flex items-center justify-center bg-black/30 opacity-0 group-hover:opacity-100 rounded-full cursor-pointer transition-opacity">
                       <input
@@ -337,6 +344,17 @@ const Profile = () => {
             </Card>
           </div>
         </main>
+        
+        {/* Chatbot button */}
+        <div className="fixed bottom-6 right-6 z-50">
+          <Button 
+            onClick={openChatbot}
+            className="rounded-full bg-cutelist-primary hover:bg-cutelist-secondary w-12 h-12 flex items-center justify-center shadow-lg"
+            aria-label="Chat with us"
+          >
+            <MessageCircle className="h-6 w-6" />
+          </Button>
+        </div>
       </div>
     </ThemeProvider>
   );

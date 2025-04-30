@@ -303,9 +303,7 @@ self.addEventListener('message', (event) => {
   if (event.data && event.data.type === 'ONLINE_STATUS_CHANGE') {
     if (event.data.online) {
       // Trigger sync when the app comes online
-      self.registration.sync.register('sync-offline-data').catch(err => {
-        console.error('Failed to register sync:', err);
-      });
+      self.registration.sync.register('sync-offline-data');
     }
   }
   
@@ -320,9 +318,7 @@ self.addEventListener('message', (event) => {
   if (event.data && event.data.type === 'ONLINE_STATUS_CHANGE') {
     if (event.data.online) {
       // When back online, trigger sync
-      self.registration.sync.register('sync-offline-data').catch(err => {
-        console.error('Failed to register sync:', err);
-      });
+      self.registration.sync.register('sync-offline-data');
     }
   }
 });

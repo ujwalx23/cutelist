@@ -15,7 +15,7 @@ interface Profile {
 }
 
 export const Header = () => {
-  const { user, signOut } = useAuth();
+  const { user, logout } = useAuth();
   const [profile, setProfile] = useState<Profile | null>(null);
 
   useEffect(() => {
@@ -87,7 +87,7 @@ export const Header = () => {
             <Button
               variant="outline"
               className="hidden md:inline-flex"
-              onClick={signOut}
+              onClick={logout}
             >
               Logout
             </Button>

@@ -7,7 +7,6 @@ import { ThemeProvider } from "@/components/ThemeProvider";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
-import { Link } from "react-router-dom";
 
 const Index = () => {
   const { user } = useAuth();
@@ -26,9 +25,7 @@ const Index = () => {
               {!user ? (
                 <div className="text-center mb-8">
                   <p className="mb-4 text-gray-300">Sign in to create and manage your tasks</p>
-                  <Button variant="default" className="md:hidden" asChild>
-                    <Link to="/profile">Login</Link>
-                  </Button>
+            
                 </div>
               ) : (
                 <TaskContainer />

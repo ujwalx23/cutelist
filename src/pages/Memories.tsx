@@ -10,8 +10,7 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
-import { Image, Plus, X, Upload } from "lucide-react";
-import { Quote as QuoteIcon } from "lucide-react";
+import { Image, Plus, X, Upload, Quote } from "lucide-react";
 import { Memory, Quote, MAX_MEMORIES_PHOTOS } from "@/types/memory";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -47,15 +46,10 @@ export default function Memories() {
         online: true
       });
       
-      // Request sync when online
+      // Sync data
       if ('serviceWorker' in navigator && 'SyncManager' in window) {
         navigator.serviceWorker.ready.then(registration => {
-          // Use the registration object to register sync when available
-          if ('sync' in registration) {
-            registration.sync.register('sync-offline-data').catch(err => {
-              console.error('Sync registration failed:', err);
-            });
-          }
+          registration.sync.register('sync-offline-data');
         });
       }
       
@@ -116,7 +110,7 @@ export default function Memories() {
             const dbRequest = indexedDB.open('offlineData', 1);
             
             dbRequest.onsuccess = (event) => {
-              const db = (event.target as IDBOpenDBRequest).result;
+              const db = event.target.result;
               const transaction = db.transaction(['memories'], 'readwrite');
               const store = transaction.objectStore('memories');
               
@@ -139,7 +133,7 @@ export default function Memories() {
           const dbRequest = indexedDB.open('offlineData', 1);
           
           dbRequest.onsuccess = (event) => {
-            const db = (event.target as IDBOpenDBRequest).result;
+            const db = event.target.result;
             const transaction = db.transaction(['memories'], 'readonly');
             const store = transaction.objectStore('memories');
             const getAllRequest = store.getAll();
@@ -190,7 +184,7 @@ export default function Memories() {
             const dbRequest = indexedDB.open('offlineData', 1);
             
             dbRequest.onsuccess = (event) => {
-              const db = (event.target as IDBOpenDBRequest).result;
+              const db = event.target.result;
               const transaction = db.transaction(['quotes'], 'readwrite');
               const store = transaction.objectStore('quotes');
               
@@ -213,7 +207,7 @@ export default function Memories() {
           const dbRequest = indexedDB.open('offlineData', 1);
           
           dbRequest.onsuccess = (event) => {
-            const db = (event.target as IDBOpenDBRequest).result;
+            const db = event.target.result;
             const transaction = db.transaction(['quotes'], 'readonly');
             const store = transaction.objectStore('quotes');
             const getAllRequest = store.getAll();
@@ -301,7 +295,7 @@ export default function Memories() {
                 const dbRequest = indexedDB.open('offlineData', 1);
                 
                 dbRequest.onsuccess = (event) => {
-                  const db = (event.target as IDBOpenDBRequest).result;
+                  const db = event.target.result;
                   const transaction = db.transaction(['pendingUploads'], 'readwrite');
                   const store = transaction.objectStore('pendingUploads');
                   
@@ -408,7 +402,7 @@ export default function Memories() {
         return;
       }
       
-      const newMemory: Memory = {
+      const newMemory = {
         user_id: user.id,
         title: title.trim(),
         description: description.trim() || null,
@@ -425,7 +419,7 @@ export default function Memories() {
             const dbRequest = indexedDB.open('offlineData', 1);
             
             dbRequest.onsuccess = (event) => {
-              const db = (event.target as IDBOpenDBRequest).result;
+              const db = event.target.result;
               
               // Add to memories store
               const memoriesTransaction = db.transaction(['memories'], 'readwrite');
@@ -436,10 +430,9 @@ export default function Memories() {
               const pendingTransaction = db.transaction(['pendingChanges'], 'readwrite');
               const pendingStore = pendingTransaction.objectStore('pendingChanges');
               
-              const apiUrl = new URL("/rest/v1/memories", supabase.getUrl()).toString();
               pendingStore.add({
                 id: Date.now().toString(),
-                url: apiUrl,
+                url: `${supabase.supabaseUrl}/rest/v1/memories`,
                 method: 'POST',
                 body: newMemory,
                 time: new Date().toISOString()
@@ -513,7 +506,7 @@ export default function Memories() {
         return;
       }
       
-      const newQuote: Quote = {
+      const newQuote = {
         user_id: user.id,
         content: quoteContent.trim(),
         author: quoteAuthor.trim() || null,
@@ -528,7 +521,7 @@ export default function Memories() {
             const dbRequest = indexedDB.open('offlineData', 1);
             
             dbRequest.onsuccess = (event) => {
-              const db = (event.target as IDBOpenDBRequest).result;
+              const db = event.target.result;
               
               // Add to quotes store
               const quotesTransaction = db.transaction(['quotes'], 'readwrite');
@@ -539,10 +532,9 @@ export default function Memories() {
               const pendingTransaction = db.transaction(['pendingChanges'], 'readwrite');
               const pendingStore = pendingTransaction.objectStore('pendingChanges');
               
-              const apiUrl = new URL("/rest/v1/quotes", supabase.getUrl()).toString();
               pendingStore.add({
                 id: Date.now().toString(),
-                url: apiUrl,
+                url: `${supabase.supabaseUrl}/rest/v1/quotes`,
                 method: 'POST',
                 body: newQuote,
                 time: new Date().toISOString()
@@ -636,16 +628,15 @@ export default function Memories() {
           const dbRequest = indexedDB.open('offlineData', 1);
           
           dbRequest.onsuccess = (event) => {
-            const db = (event.target as IDBOpenDBRequest).result;
+            const db = event.target.result;
             
             // Add to pending changes for deletion
             const pendingTransaction = db.transaction(['pendingChanges'], 'readwrite');
             const pendingStore = pendingTransaction.objectStore('pendingChanges');
             
-            const apiUrl = new URL(`/rest/v1/memories?id=eq.${memoryId}`, supabase.getUrl()).toString();
             pendingStore.add({
               id: Date.now().toString(),
-              url: apiUrl,
+              url: `${supabase.supabaseUrl}/rest/v1/memories?id=eq.${memoryId}`,
               method: 'DELETE',
               body: {},
               time: new Date().toISOString()
@@ -657,10 +648,9 @@ export default function Memories() {
               if (imagePathMatch) {
                 const imagePath = imagePathMatch[1];
                 
-                const storageUrl = new URL(`/storage/v1/object/memories/${imagePath}`, supabase.getUrl()).toString();
                 pendingStore.add({
                   id: Date.now().toString() + '-img',
-                  url: storageUrl,
+                  url: `${supabase.supabaseUrl}/storage/v1/object/memories/${imagePath}`,
                   method: 'DELETE',
                   body: {},
                   time: new Date().toISOString()
@@ -707,16 +697,15 @@ export default function Memories() {
           const dbRequest = indexedDB.open('offlineData', 1);
           
           dbRequest.onsuccess = (event) => {
-            const db = (event.target as IDBOpenDBRequest).result;
+            const db = event.target.result;
             
             // Add to pending changes for deletion
             const pendingTransaction = db.transaction(['pendingChanges'], 'readwrite');
             const pendingStore = pendingTransaction.objectStore('pendingChanges');
             
-            const apiUrl = new URL(`/rest/v1/quotes?id=eq.${quoteId}`, supabase.getUrl()).toString();
             pendingStore.add({
               id: Date.now().toString(),
-              url: apiUrl,
+              url: `${supabase.supabaseUrl}/rest/v1/quotes?id=eq.${quoteId}`,
               method: 'DELETE',
               body: {},
               time: new Date().toISOString()
@@ -766,7 +755,7 @@ export default function Memories() {
                   <Image className="h-4 w-4 mr-2" /> Memories
                 </TabsTrigger>
                 <TabsTrigger value="quotes" className="text-sm sm:text-base">
-                  <QuoteIcon className="h-4 w-4 mr-2" /> Quotes
+                  <Quote className="h-4 w-4 mr-2" /> Quotes
                 </TabsTrigger>
               </TabsList>
 
@@ -1042,7 +1031,7 @@ export default function Memories() {
                   </div>
                 ) : !user ? (
                   <div className="text-center py-10">
-                    <QuoteIcon className="h-16 w-16 mx-auto text-gray-500 mb-4" />
+                    <Quote className="h-16 w-16 mx-auto text-gray-500 mb-4" />
                     <h3 className="text-lg font-medium mb-2">Login to View Quotes</h3>
                     <p className="text-gray-400 mb-4">
                       Please login to view and save your quotes
@@ -1053,7 +1042,7 @@ export default function Memories() {
                   </div>
                 ) : quotes.length === 0 ? (
                   <div className="text-center py-10">
-                    <QuoteIcon className="h-16 w-16 mx-auto text-gray-500 mb-4" />
+                    <Quote className="h-16 w-16 mx-auto text-gray-500 mb-4" />
                     <h3 className="text-lg font-medium mb-2">No Quotes Yet</h3>
                     <p className="text-gray-400">Save your first quote to get started!</p>
                   </div>

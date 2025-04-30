@@ -1,1083 +1,923 @@
-
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Header } from "@/components/Header";
 import { ThemeProvider } from "@/components/ThemeProvider";
+import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
+import { useNavigate } from "react-router-dom";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Card } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Skeleton } from "@/components/ui/skeleton";
-import { useToast } from "@/hooks/use-toast";
-import { Image, Plus, X, Upload, Quote } from "lucide-react";
-import { Memory, Quote, MAX_MEMORIES_PHOTOS } from "@/types/memory";
-import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/contexts/AuthContext";
-import { format, parseISO } from "date-fns";
+import { 
+  PlusCircle, 
+  Image as ImageIcon, 
+  Calendar as CalendarIcon, 
+  Heart, 
+  Trash2, 
+  X, 
+  Pencil,
+  AtSign,
+  Tag,
+  MessageSquare,
+  Quote,
+} from "lucide-react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { Label } from "@/components/ui/label";
+import { format } from "date-fns";
+import { Separator } from "@/components/ui/separator";
+import { useIsMobile } from "@/hooks/use-mobile";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Memory, Quote as QuoteType } from "@/types/memory";
 
-export default function Memories() {
-  const [memories, setMemories] = useState<Memory[]>([]);
-  const [quotes, setQuotes] = useState<Quote[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState("memories");
-  const [title, setTitle] = useState("");
-  const [description, setDescription] = useState("");
-  const [tags, setTags] = useState<string[]>([]);
-  const [currentTag, setCurrentTag] = useState("");
-  const [imageUrl, setImageUrl] = useState<string | null>(null);
-  const [uploadedImages, setUploadedImages] = useState<string[]>([]);
-  const [uploading, setUploading] = useState(false);
-  const [quoteContent, setQuoteContent] = useState("");
-  const [quoteAuthor, setQuoteAuthor] = useState("");
-  const [isOnline, setIsOnline] = useState(navigator.onLine);
-  
+const Memories = () => {
   const { user } = useAuth();
   const { toast } = useToast();
+  const navigate = useNavigate();
+  const queryClient = useQueryClient();
+  const isMobile = useIsMobile();
   const fileInputRef = useRef<HTMLInputElement>(null);
   
-  // Track online status
+  // State management
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [isViewModalOpen, setIsViewModalOpen] = useState(false);
+  const [isAddQuoteModalOpen, setIsAddQuoteModalOpen] = useState(false);
+  const [activeMemory, setActiveMemory] = useState<Memory | null>(null);
+  const [viewType, setViewType] = useState<"memories" | "quotes">("memories");
+  const [previewImage, setPreviewImage] = useState<string | null>(null);
+  const [uploadProgress, setUploadProgress] = useState(0);
+  const [newMemory, setNewMemory] = useState({
+    title: "",
+    description: "",
+    image: null as File | null,
+    tags: "",
+  });
+  const [newQuote, setNewQuote] = useState({
+    content: "",
+    author: "",
+  });
+  const [favorites, setFavorites] = useState<string[]>([]);
+
+  // Check authentication
   useEffect(() => {
-    const handleOnline = () => {
-      setIsOnline(true);
-      // Tell service worker we're online
-      navigator.serviceWorker.controller?.postMessage({
-        type: "ONLINE_STATUS_CHANGE",
-        online: true
-      });
-      
-      // Sync data
-      if ('serviceWorker' in navigator && 'SyncManager' in window) {
-        navigator.serviceWorker.ready.then(registration => {
-          registration.sync.register('sync-offline-data');
-        });
-      }
-      
-      // Refresh data
-      fetchMemories();
-      fetchQuotes();
-      
+    if (!user) {
       toast({
-        title: "You're back online!",
-        description: "Your changes will now sync with the server.",
+        title: "Authentication Required",
+        description: "Please sign in to access memories and quotes.",
+        variant: "destructive",
       });
-    };
-    
-    const handleOffline = () => {
-      setIsOnline(false);
-      // Tell service worker we're offline
-      navigator.serviceWorker.controller?.postMessage({
-        type: "ONLINE_STATUS_CHANGE",
-        online: false
-      });
-      
-      toast({
-        title: "You're offline",
-        description: "Don't worry, changes will be saved locally and synced when you're back online.",
-      });
-    };
+      navigate("/");
+    }
+  }, [user, navigate, toast]);
 
-    window.addEventListener("online", handleOnline);
-    window.addEventListener("offline", handleOffline);
+  // Fetch memories using a mock function first to avoid TypeScript errors
+  const fetchMemories = async () => {
+    if (!user) return [];
     
-    return () => {
-      window.removeEventListener("online", handleOnline);
-      window.removeEventListener("offline", handleOffline);
-    };
-  }, []);
-
-  const fetchMemories = useCallback(async () => {
     try {
-      if (!user) return;
+      // Using a mock fetch until we can properly update the Supabase types
+      const { data, error } = await supabase
+        .from('memories')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false }) as unknown as { 
+          data: Memory[] | null, 
+          error: any 
+        };
       
-      setLoading(true);
-      
-      // Try to fetch from Supabase if online
-      if (navigator.onLine) {
-        const { data, error } = await supabase
-          .from("memories")
-          .select("*")
-          .eq("user_id", user.id)
-          .order("created_at", { ascending: false });
-        
-        if (error) throw error;
-        
-        setMemories(data || []);
-        
-        // Store in IndexedDB for offline use
-        if ('indexedDB' in window) {
-          try {
-            const dbRequest = indexedDB.open('offlineData', 1);
-            
-            dbRequest.onsuccess = (event) => {
-              const db = event.target.result;
-              const transaction = db.transaction(['memories'], 'readwrite');
-              const store = transaction.objectStore('memories');
-              
-              // Clear existing data
-              store.clear();
-              
-              // Add new data
-              data?.forEach(memory => {
-                store.add(memory);
-              });
-            };
-          } catch (err) {
-            console.error("Error storing memories in IndexedDB:", err);
-          }
-        }
-      } 
-      // Try to get from IndexedDB if offline
-      else if ('indexedDB' in window) {
-        try {
-          const dbRequest = indexedDB.open('offlineData', 1);
-          
-          dbRequest.onsuccess = (event) => {
-            const db = event.target.result;
-            const transaction = db.transaction(['memories'], 'readonly');
-            const store = transaction.objectStore('memories');
-            const getAllRequest = store.getAll();
-            
-            getAllRequest.onsuccess = () => {
-              if (getAllRequest.result) {
-                setMemories(getAllRequest.result);
-              }
-            };
-          };
-        } catch (err) {
-          console.error("Error accessing offline memories:", err);
-        }
-      }
+      if (error) throw error;
+      return data || [];
     } catch (error) {
       console.error("Error fetching memories:", error);
-      toast({
-        title: "Error",
-        description: "Failed to load memories. Please try again.",
-        variant: "destructive",
-      });
-    } finally {
-      setLoading(false);
+      return [];
     }
-  }, [user]);
+  };
 
-  const fetchQuotes = useCallback(async () => {
-    try {
-      if (!user) return;
+  // Use the mock function in the query
+  const { data: memories = [], isLoading: isLoadingMemories, refetch: refetchMemories } = useQuery({
+    queryKey: ['memories', user?.id],
+    queryFn: fetchMemories,
+    enabled: !!user && viewType === "memories"
+  });
+
+  // Fetch quotes
+  const { data: quotes = [], isLoading: isLoadingQuotes, refetch: refetchQuotes } = useQuery({
+    queryKey: ['quotes', user?.id],
+    queryFn: async () => {
+      if (!user) return [];
       
-      setLoading(true);
-      
-      // Try to fetch from Supabase if online
-      if (navigator.onLine) {
-        const { data, error } = await supabase
-          .from("quotes")
-          .select("*")
-          .eq("user_id", user.id)
-          .order("created_at", { ascending: false });
+      try {
+        const { data: quotesData, error } = await supabase
+          .from('quotes')
+          .select('*')
+          .order('created_at', { ascending: false });
         
         if (error) throw error;
+        return quotesData as QuoteType[] || [];
+      } catch (error) {
+        console.error("Error fetching quotes:", error);
+        return [];
+      }
+    },
+    enabled: !!user && viewType === "quotes"
+  });
+
+  // Create memory mutation
+  const createMemoryMutation = useMutation({
+    mutationFn: async (memoryData: typeof newMemory) => {
+      if (!user) throw new Error("User not authenticated");
+      setUploadProgress(10);
+      
+      let imageUrl = "";
+      
+      // If there's an image, upload it to Storage
+      if (memoryData.image) {
+        const fileExt = memoryData.image.name.split('.').pop();
+        const fileName = `${user.id}/${Date.now()}.${fileExt}`;
         
-        setQuotes(data || []);
+        setUploadProgress(30);
         
-        // Store in IndexedDB for offline use
-        if ('indexedDB' in window) {
-          try {
-            const dbRequest = indexedDB.open('offlineData', 1);
-            
-            dbRequest.onsuccess = (event) => {
-              const db = event.target.result;
-              const transaction = db.transaction(['quotes'], 'readwrite');
-              const store = transaction.objectStore('quotes');
-              
-              // Clear existing data
-              store.clear();
-              
-              // Add new data
-              data?.forEach(quote => {
-                store.add(quote);
-              });
-            };
-          } catch (err) {
-            console.error("Error storing quotes in IndexedDB:", err);
-          }
-        }
-      } 
-      // Try to get from IndexedDB if offline
-      else if ('indexedDB' in window) {
-        try {
-          const dbRequest = indexedDB.open('offlineData', 1);
-          
-          dbRequest.onsuccess = (event) => {
-            const db = event.target.result;
-            const transaction = db.transaction(['quotes'], 'readonly');
-            const store = transaction.objectStore('quotes');
-            const getAllRequest = store.getAll();
-            
-            getAllRequest.onsuccess = () => {
-              if (getAllRequest.result) {
-                setQuotes(getAllRequest.result);
-              }
-            };
-          };
-        } catch (err) {
-          console.error("Error accessing offline quotes:", err);
-        }
-      }
-    } catch (error) {
-      console.error("Error fetching quotes:", error);
-      toast({
-        title: "Error",
-        description: "Failed to load quotes. Please try again.",
-        variant: "destructive",
-      });
-    } finally {
-      setLoading(false);
-    }
-  }, [user]);
-
-  useEffect(() => {
-    if (user) {
-      fetchMemories();
-      fetchQuotes();
-    }
-  }, [user, fetchMemories, fetchQuotes]);
-
-  // Check memory image count
-  const checkMemoryImageLimit = useCallback(async () => {
-    try {
-      if (!user) return true; // Allow if not logged in
-      
-      // Count existing images
-      const existingImagesCount = memories.filter(memory => memory.image_url).length;
-      
-      return existingImagesCount < MAX_MEMORIES_PHOTOS;
-    } catch (error) {
-      console.error("Error checking image limit:", error);
-      return false;
-    }
-  }, [memories, user]);
-
-  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    try {
-      if (!e.target.files || e.target.files.length === 0) {
-        return;
+        // Actual upload to Supabase storage
+        const { error: uploadError, data: uploadData } = await supabase.storage
+          .from('memories')
+          .upload(fileName, memoryData.image);
+        
+        if (uploadError) throw uploadError;
+        
+        setUploadProgress(60);
+        
+        // Get public URL
+        const { data } = supabase.storage
+          .from('memories')
+          .getPublicUrl(fileName);
+        
+        imageUrl = data.publicUrl;
+        setUploadProgress(90);
       }
       
-      // Check photo limit
-      const canUpload = await checkMemoryImageLimit();
+      setUploadProgress(100);
       
-      if (!canUpload) {
-        toast({
-          title: "Upload limit reached",
-          description: `You can only upload a maximum of ${MAX_MEMORIES_PHOTOS} photos. Please delete some existing memories with photos first.`,
-          variant: "destructive",
-        });
-        return;
-      }
-
-      setUploading(true);
+      // Convert tags string to array
+      const tagsArray = memoryData.tags.split(',').map(tag => tag.trim()).filter(Boolean);
       
-      const file = e.target.files[0];
-      const fileExt = file.name.split(".").pop();
-      const fileName = `${Math.random()}.${fileExt}`;
-      const filePath = `${fileName}`;
-      
-      // If offline, store in IndexedDB for later upload
-      if (!navigator.onLine) {
-        // Convert file to base64 for storing in IndexedDB
-        const reader = new FileReader();
-        reader.onload = function(event) {
-          if (event.target) {
-            const base64String = event.target.result as string;
-            
-            // Store in IndexedDB for later upload
-            if ('indexedDB' in window) {
-              try {
-                const dbRequest = indexedDB.open('offlineData', 1);
-                
-                dbRequest.onsuccess = (event) => {
-                  const db = event.target.result;
-                  const transaction = db.transaction(['pendingUploads'], 'readwrite');
-                  const store = transaction.objectStore('pendingUploads');
-                  
-                  const pendingUpload = {
-                    id: Date.now().toString(),
-                    fileName: filePath,
-                    fileData: base64String,
-                    fileType: file.type,
-                    bucket: "memories",
-                    time: new Date().toISOString()
-                  };
-                  
-                  store.add(pendingUpload);
-                  
-                  // Update UI with temporary URL for preview
-                  setImageUrl(URL.createObjectURL(file));
-                  
-                  transaction.oncomplete = () => {
-                    toast({
-                      title: "Image saved offline",
-                      description: "Your image will be uploaded when you're back online.",
-                    });
-                    setUploading(false);
-                  };
-                };
-              } catch (err) {
-                console.error("Error storing image for offline use:", err);
-                setUploading(false);
-              }
-            }
-          }
+      // Create a new memory record in Supabase
+      const { data: newMemoryData, error } = await supabase
+        .from('memories')
+        .insert([{
+          user_id: user.id,
+          title: memoryData.title,
+          description: memoryData.description,
+          image_url: imageUrl,
+          tags: tagsArray,
+        }])
+        .select() as unknown as { 
+          data: Memory[] | null, 
+          error: any 
         };
-        reader.readAsDataURL(file);
-        return;
-      }
-
-      // Upload to Supabase Storage
-      const { error: uploadError } = await supabase.storage
-        .from("memories")
-        .upload(filePath, file);
-
-      if (uploadError) {
-        throw uploadError;
-      }
       
-      // Get the public URL
-      const { data } = supabase.storage.from("memories").getPublicUrl(filePath);
-      
-      if (data?.publicUrl) {
-        setImageUrl(data.publicUrl);
-        setUploadedImages([...uploadedImages, data.publicUrl]);
-      }
-    } catch (error) {
-      console.error("Error uploading image:", error);
-      toast({
-        title: "Upload Failed",
-        description: "Failed to upload image. Please try again.",
-        variant: "destructive",
-      });
-    } finally {
-      setUploading(false);
-      if (fileInputRef.current) {
-        fileInputRef.current.value = "";
-      }
-    }
-  };
-
-  const handleAddTag = () => {
-    const trimmedTag = currentTag.trim();
-    if (trimmedTag && !tags.includes(trimmedTag)) {
-      setTags([...tags, trimmedTag]);
-      setCurrentTag("");
-    }
-  };
-
-  const handleRemoveTag = (tagToRemove: string) => {
-    setTags(tags.filter((tag) => tag !== tagToRemove));
-  };
-
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === "Enter") {
-      e.preventDefault();
-      handleAddTag();
-    }
-  };
-
-  const handleCreateMemory = async () => {
-    try {
-      if (!user) {
-        toast({
-          title: "Authentication Required",
-          description: "Please login to create memories.",
-          variant: "destructive",
-        });
-        return;
-      }
-
-      if (!title.trim()) {
-        toast({
-          title: "Title Required",
-          description: "Please enter a title for your memory.",
-          variant: "destructive",
-        });
-        return;
-      }
-      
-      const newMemory = {
-        user_id: user.id,
-        title: title.trim(),
-        description: description.trim() || null,
-        image_url: imageUrl,
-        tags: tags.length > 0 ? tags : null,
-        created_at: new Date().toISOString(),
-        id: crypto.randomUUID()
-      };
-      
-      // If offline, store in IndexedDB
-      if (!navigator.onLine) {
-        if ('indexedDB' in window) {
-          try {
-            const dbRequest = indexedDB.open('offlineData', 1);
-            
-            dbRequest.onsuccess = (event) => {
-              const db = event.target.result;
-              
-              // Add to memories store
-              const memoriesTransaction = db.transaction(['memories'], 'readwrite');
-              const memoriesStore = memoriesTransaction.objectStore('memories');
-              memoriesStore.add(newMemory);
-              
-              // Add to pending changes for later sync
-              const pendingTransaction = db.transaction(['pendingChanges'], 'readwrite');
-              const pendingStore = pendingTransaction.objectStore('pendingChanges');
-              
-              pendingStore.add({
-                id: Date.now().toString(),
-                url: `${supabase.supabaseUrl}/rest/v1/memories`,
-                method: 'POST',
-                body: newMemory,
-                time: new Date().toISOString()
-              });
-              
-              // Update UI immediately
-              setMemories([newMemory, ...memories]);
-              
-              // Reset form
-              resetMemoryForm();
-              
-              toast({
-                title: "Memory saved offline",
-                description: "Your memory has been saved locally and will sync when you're back online.",
-              });
-            };
-          } catch (err) {
-            console.error("Error saving memory offline:", err);
-            toast({
-              title: "Error",
-              description: "Failed to save memory offline. Please try again later.",
-              variant: "destructive",
-            });
-          }
-        }
-        return;
-      }
-
-      // Insert memory to Supabase
-      const { error } = await supabase.from("memories").insert(newMemory);
-
       if (error) throw error;
-
-      // Refresh memories
-      fetchMemories();
       
-      // Reset form
-      resetMemoryForm();
-      
+      return newMemoryData ? newMemoryData[0] : null;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({queryKey: ['memories', user?.id]});
+      refetchMemories();
       toast({
         title: "Memory Created",
-        description: "Your memory has been saved successfully.",
+        description: "Your memory has been stored successfully.",
       });
-    } catch (error) {
-      console.error("Error creating memory:", error);
+      setIsAddModalOpen(false);
+      setPreviewImage(null);
+      setUploadProgress(0);
+      setNewMemory({
+        title: "",
+        description: "",
+        image: null,
+        tags: "",
+      });
+    },
+    onError: (error) => {
       toast({
         title: "Error",
-        description: "Failed to create memory. Please try again.",
+        description: `Failed to create memory: ${error.message}`,
         variant: "destructive",
       });
-    }
-  };
+      setUploadProgress(0);
+    },
+  });
 
-  const handleCreateQuote = async () => {
-    try {
-      if (!user) {
-        toast({
-          title: "Authentication Required",
-          description: "Please login to save quotes.",
-          variant: "destructive",
-        });
-        return;
-      }
-
-      if (!quoteContent.trim()) {
-        toast({
-          title: "Quote Required",
-          description: "Please enter a quote.",
-          variant: "destructive",
-        });
-        return;
-      }
+  // Create quote mutation
+  const createQuoteMutation = useMutation({
+    mutationFn: async (quoteData: typeof newQuote) => {
+      if (!user) throw new Error("User not authenticated");
       
-      const newQuote = {
-        user_id: user.id,
-        content: quoteContent.trim(),
-        author: quoteAuthor.trim() || null,
-        created_at: new Date().toISOString(),
-        id: crypto.randomUUID()
-      };
+      // Create a new quote in Supabase
+      const { data: newQuoteData, error } = await supabase
+        .from('quotes')
+        .insert([{
+          user_id: user.id,
+          content: quoteData.content,
+          author: quoteData.author || null,
+        }])
+        .select();
       
-      // If offline, store in IndexedDB
-      if (!navigator.onLine) {
-        if ('indexedDB' in window) {
-          try {
-            const dbRequest = indexedDB.open('offlineData', 1);
-            
-            dbRequest.onsuccess = (event) => {
-              const db = event.target.result;
-              
-              // Add to quotes store
-              const quotesTransaction = db.transaction(['quotes'], 'readwrite');
-              const quotesStore = quotesTransaction.objectStore('quotes');
-              quotesStore.add(newQuote);
-              
-              // Add to pending changes for later sync
-              const pendingTransaction = db.transaction(['pendingChanges'], 'readwrite');
-              const pendingStore = pendingTransaction.objectStore('pendingChanges');
-              
-              pendingStore.add({
-                id: Date.now().toString(),
-                url: `${supabase.supabaseUrl}/rest/v1/quotes`,
-                method: 'POST',
-                body: newQuote,
-                time: new Date().toISOString()
-              });
-              
-              // Update UI immediately
-              setQuotes([newQuote, ...quotes]);
-              
-              // Reset form
-              resetQuoteForm();
-              
-              toast({
-                title: "Quote saved offline",
-                description: "Your quote has been saved locally and will sync when you're back online.",
-              });
-            };
-          } catch (err) {
-            console.error("Error saving quote offline:", err);
-            toast({
-              title: "Error",
-              description: "Failed to save quote offline. Please try again later.",
-              variant: "destructive",
-            });
-          }
-        }
-        return;
-      }
-
-      // Insert quote to Supabase
-      const { error } = await supabase.from("quotes").insert(newQuote);
-
       if (error) throw error;
-
-      // Refresh quotes
-      fetchQuotes();
       
-      // Reset form
-      resetQuoteForm();
-      
+      return newQuoteData[0] as QuoteType;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({queryKey: ['quotes']});
+      refetchQuotes();
       toast({
-        title: "Quote Saved",
-        description: "Your quote has been saved successfully.",
+        title: "Quote Added",
+        description: "Your inspirational quote has been added successfully.",
       });
-    } catch (error) {
-      console.error("Error creating quote:", error);
+      setIsAddQuoteModalOpen(false);
+      setNewQuote({
+        content: "",
+        author: "",
+      });
+    },
+    onError: (error) => {
       toast({
         title: "Error",
-        description: "Failed to save quote. Please try again.",
+        description: `Failed to add quote: ${error.message}`,
         variant: "destructive",
       });
-    }
-  };
+    },
+  });
 
-  const resetMemoryForm = () => {
-    setTitle("");
-    setDescription("");
-    setTags([]);
-    setCurrentTag("");
-    setImageUrl(null);
-  };
-
-  const resetQuoteForm = () => {
-    setQuoteContent("");
-    setQuoteAuthor("");
-  };
-
-  const handleDeleteMemory = async (memoryId: string) => {
-    try {
-      if (!user) return;
+  // Delete memory mutation
+  const deleteMemoryMutation = useMutation({
+    mutationFn: async (memoryId: string) => {
+      if (!user) throw new Error("User not authenticated");
       
-      // Find memory to get image URL if any
-      const memoryToDelete = memories.find(memory => memory.id === memoryId);
+      const { error } = await supabase
+        .from('memories')
+        .delete()
+        .eq('id', memoryId)
+        .eq('user_id', user.id) as unknown as { 
+          error: any 
+        };
       
-      // Delete from Supabase if online
-      if (navigator.onLine) {
-        // Delete image from storage if exists
-        if (memoryToDelete?.image_url) {
-          const imagePathMatch = memoryToDelete.image_url.match(/\/([^/]+)$/);
-          if (imagePathMatch) {
-            const imagePath = imagePathMatch[1];
-            await supabase.storage.from("memories").remove([imagePath]);
-          }
-        }
-        
-        const { error } = await supabase.from("memories").delete().eq("id", memoryId);
-        if (error) throw error;
-      } 
-      // If offline, mark for deletion
-      else if ('indexedDB' in window) {
-        try {
-          const dbRequest = indexedDB.open('offlineData', 1);
-          
-          dbRequest.onsuccess = (event) => {
-            const db = event.target.result;
-            
-            // Add to pending changes for deletion
-            const pendingTransaction = db.transaction(['pendingChanges'], 'readwrite');
-            const pendingStore = pendingTransaction.objectStore('pendingChanges');
-            
-            pendingStore.add({
-              id: Date.now().toString(),
-              url: `${supabase.supabaseUrl}/rest/v1/memories?id=eq.${memoryId}`,
-              method: 'DELETE',
-              body: {},
-              time: new Date().toISOString()
-            });
-            
-            // Also mark image for deletion if exists
-            if (memoryToDelete?.image_url) {
-              const imagePathMatch = memoryToDelete.image_url.match(/\/([^/]+)$/);
-              if (imagePathMatch) {
-                const imagePath = imagePathMatch[1];
-                
-                pendingStore.add({
-                  id: Date.now().toString() + '-img',
-                  url: `${supabase.supabaseUrl}/storage/v1/object/memories/${imagePath}`,
-                  method: 'DELETE',
-                  body: {},
-                  time: new Date().toISOString()
-                });
-              }
-            }
-          };
-        } catch (err) {
-          console.error("Error marking memory for deletion:", err);
-        }
-      }
+      if (error) throw error;
       
-      // Update UI
-      setMemories(memories.filter((memory) => memory.id !== memoryId));
-      
+      return { success: true };
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({queryKey: ['memories', user?.id]});
+      refetchMemories();
       toast({
         title: "Memory Deleted",
-        description: navigator.onLine 
-          ? "Your memory has been deleted." 
-          : "Your memory will be deleted when you're back online.",
+        description: "Your memory has been deleted successfully.",
       });
-    } catch (error) {
-      console.error("Error deleting memory:", error);
+      setIsViewModalOpen(false);
+      setActiveMemory(null);
+    },
+    onError: (error) => {
       toast({
         title: "Error",
-        description: "Failed to delete memory. Please try again.",
+        description: `Failed to delete memory: ${error.message}`,
         variant: "destructive",
       });
+    },
+  });
+
+  // Delete quote mutation
+  const deleteQuoteMutation = useMutation({
+    mutationFn: async (quoteId: string) => {
+      if (!user) throw new Error("User not authenticated");
+      
+      const { error } = await supabase
+        .from('quotes')
+        .delete()
+        .eq('id', quoteId)
+        .eq('user_id', user.id);
+      
+      if (error) throw error;
+      
+      return { success: true };
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({queryKey: ['quotes']});
+      refetchQuotes();
+      toast({
+        title: "Quote Deleted",
+        description: "Your quote has been deleted successfully.",
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: `Failed to delete quote: ${error.message}`,
+        variant: "destructive",
+      });
+    },
+  });
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!e.target.files || e.target.files.length === 0) return;
+    
+    const file = e.target.files[0];
+    setNewMemory({ ...newMemory, image: file });
+    
+    // Create preview
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setPreviewImage(reader.result as string);
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleCreateMemory = () => {
+    if (!user) {
+      toast({
+        title: "Authentication Required",
+        description: "Please sign in to create memories.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!newMemory.title.trim()) {
+      toast({
+        title: "Title Required",
+        description: "Please enter a title for your memory.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    createMemoryMutation.mutate(newMemory);
+  };
+
+  const handleCreateQuote = () => {
+    if (!user) {
+      toast({
+        title: "Authentication Required",
+        description: "Please sign in to add quotes.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!newQuote.content.trim()) {
+      toast({
+        title: "Content Required",
+        description: "Please enter content for your quote.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    createQuoteMutation.mutate(newQuote);
+  };
+
+  const handleDeleteMemory = (id: string) => {
+    deleteMemoryMutation.mutate(id);
+  };
+
+  const handleViewMemory = (memory: Memory) => {
+    setActiveMemory(memory);
+    setIsViewModalOpen(true);
+  };
+
+  const toggleFavorite = (id: string) => {
+    if (favorites.includes(id)) {
+      setFavorites(favorites.filter(fav => fav !== id));
+    } else {
+      setFavorites([...favorites, id]);
     }
   };
 
-  const handleDeleteQuote = async (quoteId: string) => {
-    try {
-      if (!user) return;
-      
-      // Delete from Supabase if online
-      if (navigator.onLine) {
-        const { error } = await supabase.from("quotes").delete().eq("id", quoteId);
-        if (error) throw error;
-      } 
-      // If offline, mark for deletion
-      else if ('indexedDB' in window) {
-        try {
-          const dbRequest = indexedDB.open('offlineData', 1);
-          
-          dbRequest.onsuccess = (event) => {
-            const db = event.target.result;
-            
-            // Add to pending changes for deletion
-            const pendingTransaction = db.transaction(['pendingChanges'], 'readwrite');
-            const pendingStore = pendingTransaction.objectStore('pendingChanges');
-            
-            pendingStore.add({
-              id: Date.now().toString(),
-              url: `${supabase.supabaseUrl}/rest/v1/quotes?id=eq.${quoteId}`,
-              method: 'DELETE',
-              body: {},
-              time: new Date().toISOString()
-            });
-          };
-        } catch (err) {
-          console.error("Error marking quote for deletion:", err);
-        }
-      }
-      
-      // Update UI
-      setQuotes(quotes.filter((quote) => quote.id !== quoteId));
-      
-      toast({
-        title: "Quote Deleted",
-        description: navigator.onLine 
-          ? "Your quote has been deleted." 
-          : "Your quote will be deleted when you're back online.",
-      });
-    } catch (error) {
-      console.error("Error deleting quote:", error);
-      toast({
-        title: "Error",
-        description: "Failed to delete quote. Please try again.",
-        variant: "destructive",
-      });
-    }
+  const renderMemoryCard = (memory: Memory) => {
+    const isFavorite = favorites.includes(memory.id);
+    
+    return (
+      <Card 
+        key={memory.id} 
+        className="overflow-hidden transition-all hover:shadow-lg cursor-pointer group"
+        onClick={() => handleViewMemory(memory)}
+      >
+        <div className="aspect-video relative overflow-hidden">
+          {memory.image_url && (
+            <img 
+              src={memory.image_url} 
+              alt={memory.title} 
+              className="w-full h-full object-cover transition-transform group-hover:scale-105"
+            />
+          )}
+          <div 
+            className="absolute top-2 right-2 z-10"
+            onClick={(e) => {
+              e.stopPropagation();
+              toggleFavorite(memory.id);
+            }}
+          >
+            <Heart 
+              className={`h-6 w-6 transition-colors ${
+                isFavorite 
+                  ? "fill-red-500 text-red-500" 
+                  : "fill-transparent text-white/70 hover:text-white"
+              }`} 
+            />
+          </div>
+        </div>
+        <CardHeader className="p-4">
+          <div className="flex items-center justify-between">
+            <CardTitle className="text-lg line-clamp-1">{memory.title}</CardTitle>
+          </div>
+          <CardDescription className="line-clamp-1 flex items-center">
+            <CalendarIcon className="h-3 w-3 mr-1" />
+            {format(new Date(memory.created_at), "MMM d, yyyy")}
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="p-4 pt-0">
+          <p className="text-sm text-gray-400 line-clamp-2">{memory.description}</p>
+        </CardContent>
+        <CardFooter className="p-4 pt-0">
+          <div className="flex flex-wrap gap-1">
+            {memory.tags && memory.tags.map((tag, i) => (
+              <span 
+                key={i} 
+                className="text-xs px-2 py-1 bg-cutelist-primary/20 text-cutelist-primary rounded-full"
+              >
+                #{tag}
+              </span>
+            ))}
+          </div>
+        </CardFooter>
+      </Card>
+    );
   };
+
+  const renderQuoteCard = (quote: QuoteType) => {
+    return (
+      <Card key={quote.id} className="overflow-hidden">
+        <CardHeader className="p-4">
+          <div className="flex justify-between items-start">
+            <Quote className="h-6 w-6 text-cutelist-primary/80" />
+            {quote.user_id === user?.id && (
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                className="h-8 w-8 text-gray-400 hover:text-red-500"
+                onClick={() => deleteQuoteMutation.mutate(quote.id)}
+              >
+                <Trash2 className="h-4 w-4" />
+              </Button>
+            )}
+          </div>
+        </CardHeader>
+        <CardContent className="p-4 pt-0">
+          <p className="text-lg italic mb-2">"{quote.content}"</p>
+          <p className="text-sm text-gray-400 text-right">— {quote.author || "Unknown"}</p>
+        </CardContent>
+        <CardFooter className="p-4 pt-0 text-xs text-gray-500 flex justify-between">
+          <span>{format(new Date(quote.created_at), "MMM d, yyyy")}</span>
+        </CardFooter>
+      </Card>
+    );
+  };
+
+  const renderMemoriesTab = () => {
+    return (
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {isLoadingMemories ? (
+          Array(3).fill(0).map((_, i) => (
+            <Card key={i} className="opacity-50">
+              <div className="aspect-video bg-cutelist-dark/70 animate-pulse" />
+              <CardHeader>
+                <div className="h-6 w-3/4 bg-cutelist-dark/70 rounded animate-pulse" />
+                <div className="h-4 w-1/3 bg-cutelist-dark/70 rounded animate-pulse" />
+              </CardHeader>
+              <CardContent>
+                <div className="h-4 w-full bg-cutelist-dark/70 rounded animate-pulse mb-2" />
+                <div className="h-4 w-5/6 bg-cutelist-dark/70 rounded animate-pulse" />
+              </CardContent>
+            </Card>
+          ))
+        ) : memories && memories.length > 0 ? (
+          memories.map(memory => renderMemoryCard(memory))
+        ) : (
+          <div className="col-span-full flex flex-col items-center justify-center py-12">
+            <ImageIcon className="h-16 w-16 mb-4 text-gray-600" />
+            <h3 className="text-xl font-medium mb-2">No memories yet</h3>
+            <p className="text-gray-400 text-center mb-4">
+              Create your first memory to get started
+            </p>
+            <Button onClick={() => setIsAddModalOpen(true)}>
+              Create Memory
+            </Button>
+          </div>
+        )}
+      </div>
+    );
+  };
+
+  const renderQuotesTab = () => {
+    return (
+      <div>
+        <div className="mb-6 bg-cutelist-primary/10 p-5 rounded-xl border border-cutelist-primary/20">
+          <h3 className="text-lg font-medium mb-2">Share Inspiration</h3>
+          <p className="text-gray-400 text-sm mb-4">
+            Share your favorite quotes, affirmations, or words of wisdom with the community.
+          </p>
+          <div className="flex gap-2">
+            <Button
+              onClick={() => setIsAddQuoteModalOpen(true)}
+              size={isMobile ? "sm" : "default"}
+              className="flex items-center gap-2"
+            >
+              <PlusCircle className="h-4 w-4" />
+              Add Quote
+            </Button>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {isLoadingQuotes ? (
+            Array(3).fill(0).map((_, i) => (
+              <Card key={i} className="opacity-50">
+                <CardHeader>
+                  <div className="h-6 w-3/4 bg-cutelist-dark/70 rounded animate-pulse" />
+                </CardHeader>
+                <CardContent>
+                  <div className="h-4 w-full bg-cutelist-dark/70 rounded animate-pulse mb-2" />
+                  <div className="h-4 w-5/6 bg-cutelist-dark/70 rounded animate-pulse" />
+                  <div className="h-4 w-1/3 bg-cutelist-dark/70 rounded animate-pulse mt-2 ml-auto" />
+                </CardContent>
+              </Card>
+            ))
+          ) : quotes && quotes.length > 0 ? (
+            quotes.map(quote => renderQuoteCard(quote))
+          ) : (
+            <div className="col-span-full flex flex-col items-center justify-center py-12">
+              <MessageSquare className="h-16 w-16 mb-4 text-gray-600" />
+              <h3 className="text-xl font-medium mb-2">No quotes yet</h3>
+              <p className="text-gray-400 text-center mb-4">
+                Be the first to share an inspiring quote
+              </p>
+              <Button onClick={() => setIsAddQuoteModalOpen(true)}>
+                Add Quote
+              </Button>
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  };
+
+  // If not authenticated, show a sign-in prompt
+  if (!user) {
+    return (
+      <ThemeProvider>
+        <div className="min-h-screen flex flex-col bg-cutelist-dark">
+          <Header />
+          <main className="flex-1 container py-12 flex items-center justify-center">
+            <Card className="w-full max-w-md">
+              <CardHeader>
+                <CardTitle>Sign in Required</CardTitle>
+                <CardDescription>Please sign in to access memories and quotes</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <Button className="w-full" onClick={() => navigate("/")}>
+                  Go to Sign In
+                </Button>
+              </CardContent>
+            </Card>
+          </main>
+        </div>
+      </ThemeProvider>
+    );
+  }
 
   return (
     <ThemeProvider>
       <div className="min-h-screen flex flex-col bg-cutelist-dark">
         <Header />
-        <main className="flex-1 container py-10">
-          <div className="max-w-5xl mx-auto px-4">
-            <h1 className="text-4xl font-bold text-center mb-2 text-gradient">
-              Memories & Quotes
-            </h1>
-            <p className="text-center text-gray-400 mb-6">
-              Save your precious moments and favorite quotes
-              {!isOnline && " (Currently in offline mode)"}
-            </p>
-
-            <Tabs defaultValue={activeTab} onValueChange={setActiveTab} className="w-full">
-              <TabsList className="grid w-full grid-cols-2 mb-8">
-                <TabsTrigger value="memories" className="text-sm sm:text-base">
-                  <Image className="h-4 w-4 mr-2" /> Memories
-                </TabsTrigger>
-                <TabsTrigger value="quotes" className="text-sm sm:text-base">
-                  <Quote className="h-4 w-4 mr-2" /> Quotes
-                </TabsTrigger>
+        <main className="flex-1 container py-12">
+          <div className="max-w-6xl mx-auto px-4">
+            <div className="flex flex-col md:flex-row items-center justify-between mb-8">
+              <div>
+                <h1 className="text-4xl font-bold text-gradient mb-2">Memories & Inspirations</h1>
+                <p className="text-gray-400">Capture your precious moments and share inspiring quotes</p>
+              </div>
+              <div className="flex gap-3 mt-4 md:mt-0">
+                {viewType === "memories" && (
+                  <Button
+                    onClick={() => setIsAddModalOpen(true)}
+                    className="flex items-center gap-2"
+                  >
+                    <PlusCircle className="h-4 w-4" />
+                    Create Memory
+                  </Button>
+                )}
+                {viewType === "quotes" && (
+                  <Button
+                    onClick={() => setIsAddQuoteModalOpen(true)}
+                    className="flex items-center gap-2"
+                  >
+                    <PlusCircle className="h-4 w-4" />
+                    Add Quote
+                  </Button>
+                )}
+              </div>
+            </div>
+            
+            <Tabs 
+              defaultValue="memories" 
+              value={viewType} 
+              onValueChange={(value) => setViewType(value as any)}
+              className="mb-6"
+            >
+              <TabsList className="mb-6">
+                <TabsTrigger value="memories">Memories</TabsTrigger>
+                <TabsTrigger value="quotes">Inspirational Quotes</TabsTrigger>
               </TabsList>
-
+              
               <TabsContent value="memories">
-                {user && (
-                  <Card className="glass-card p-6 mb-8">
-                    <h2 className="text-xl font-semibold mb-4">Create New Memory</h2>
-                    <div className="space-y-4">
-                      <div>
-                        <label className="block text-sm font-medium mb-1">Title</label>
-                        <Input
-                          value={title}
-                          onChange={(e) => setTitle(e.target.value)}
-                          placeholder="Enter a title for your memory"
-                          className="bg-cutelist-dark/50 border-cutelist-primary/30"
-                        />
-                      </div>
-
-                      <div>
-                        <label className="block text-sm font-medium mb-1">
-                          Description (optional)
-                        </label>
-                        <Textarea
-                          value={description}
-                          onChange={(e) => setDescription(e.target.value)}
-                          placeholder="Describe this memory..."
-                          className="bg-cutelist-dark/50 border-cutelist-primary/30 resize-none"
-                          rows={3}
-                        />
-                      </div>
-
-                      <div>
-                        <label className="block text-sm font-medium mb-1">
-                          Tags (optional)
-                        </label>
-                        <div className="flex items-center">
-                          <Input
-                            value={currentTag}
-                            onChange={(e) => setCurrentTag(e.target.value)}
-                            onKeyDown={handleKeyDown}
-                            placeholder="Add tags and press Enter"
-                            className="bg-cutelist-dark/50 border-cutelist-primary/30"
-                          />
-                          <Button
-                            onClick={handleAddTag}
-                            disabled={!currentTag.trim()}
-                            className="ml-2 bg-cutelist-primary hover:bg-cutelist-secondary"
-                            size="sm"
-                          >
-                            <Plus className="h-4 w-4" />
-                          </Button>
-                        </div>
-
-                        {tags.length > 0 && (
-                          <div className="flex flex-wrap gap-2 mt-2">
-                            {tags.map((tag) => (
-                              <Badge
-                                key={tag}
-                                variant="outline"
-                                className="flex items-center gap-1 bg-cutelist-primary/10"
-                              >
-                                {tag}
-                                <X
-                                  className="h-3 w-3 cursor-pointer"
-                                  onClick={() => handleRemoveTag(tag)}
-                                />
-                              </Badge>
-                            ))}
-                          </div>
-                        )}
-                      </div>
-
-                      <div>
-                        <label className="block text-sm font-medium mb-1">
-                          Image (optional)
-                        </label>
-                        <div className="flex items-center">
-                          <Button
-                            onClick={() => fileInputRef.current?.click()}
-                            disabled={uploading}
-                            className="bg-cutelist-dark/70 hover:bg-cutelist-dark/90 border border-dashed border-cutelist-primary/30"
-                          >
-                            <Upload className="h-4 w-4 mr-2" />
-                            {uploading ? "Uploading..." : "Upload Image"}
-                          </Button>
-                          <input
-                            ref={fileInputRef}
-                            type="file"
-                            accept="image/*"
-                            onChange={handleFileChange}
-                            className="hidden"
-                          />
-                          <div className="ml-2 text-xs text-gray-400">
-                            Note: You can upload max {MAX_MEMORIES_PHOTOS} photos
-                          </div>
-                        </div>
-
-                        {imageUrl && (
-                          <div className="mt-4 relative w-fit">
-                            <img
-                              src={imageUrl}
-                              alt="Memory"
-                              className="max-w-[200px] rounded-md"
-                            />
-                            <Button
-                              size="icon"
-                              variant="destructive"
-                              className="absolute top-1 right-1 h-6 w-6 rounded-full"
-                              onClick={() => setImageUrl(null)}
-                            >
-                              <X className="h-3 w-3" />
-                            </Button>
-                          </div>
-                        )}
-                      </div>
-
-                      <div className="pt-2">
-                        <Button
-                          onClick={handleCreateMemory}
-                          disabled={!title.trim() || uploading}
-                          className="w-full bg-cutelist-primary hover:bg-cutelist-secondary"
-                        >
-                          Save Memory
-                        </Button>
-                      </div>
-                    </div>
-                  </Card>
-                )}
-
-                <h2 className="text-2xl font-semibold mb-4">Your Memories</h2>
-
-                {loading ? (
-                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-                    {[1, 2, 3, 4, 5, 6].map((i) => (
-                      <Card key={i} className="glass-card p-4 overflow-hidden">
-                        <Skeleton className="h-32 w-full mb-4" />
-                        <Skeleton className="h-6 w-3/4 mb-2" />
-                        <Skeleton className="h-4 w-1/2" />
-                      </Card>
-                    ))}
-                  </div>
-                ) : !user ? (
-                  <div className="text-center py-10">
-                    <Image className="h-16 w-16 mx-auto text-gray-500 mb-4" />
-                    <h3 className="text-lg font-medium mb-2">Login to View Memories</h3>
-                    <p className="text-gray-400 mb-4">
-                      Please login to view and create your memories
-                    </p>
-                    <Button asChild>
-                      <a href="/profile">Login Now</a>
-                    </Button>
-                  </div>
-                ) : memories.length === 0 ? (
-                  <div className="text-center py-10">
-                    <Image className="h-16 w-16 mx-auto text-gray-500 mb-4" />
-                    <h3 className="text-lg font-medium mb-2">No Memories Yet</h3>
-                    <p className="text-gray-400">
-                      Create your first memory to get started!
-                    </p>
-                  </div>
-                ) : (
-                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-                    {memories.map((memory) => (
-                      <Card key={memory.id} className="glass-card overflow-hidden">
-                        {memory.image_url && (
-                          <div className="relative h-48">
-                            <img
-                              src={memory.image_url}
-                              alt={memory.title}
-                              className="w-full h-full object-cover"
-                            />
-                          </div>
-                        )}
-                        <div className="p-4">
-                          <div className="flex justify-between items-start">
-                            <h3 className="font-medium text-lg">{memory.title}</h3>
-                            <Button
-                              size="icon"
-                              variant="ghost"
-                              className="h-7 w-7"
-                              onClick={() => handleDeleteMemory(memory.id)}
-                            >
-                              <X className="h-4 w-4 text-gray-400" />
-                            </Button>
-                          </div>
-                          {memory.description && (
-                            <p className="text-gray-400 text-sm mt-1 line-clamp-2">
-                              {memory.description}
-                            </p>
-                          )}
-                          {memory.tags && memory.tags.length > 0 && (
-                            <div className="flex flex-wrap gap-1 mt-2">
-                              {memory.tags.slice(0, 3).map((tag) => (
-                                <Badge
-                                  key={tag}
-                                  variant="outline"
-                                  className="text-xs bg-cutelist-primary/10"
-                                >
-                                  {tag}
-                                </Badge>
-                              ))}
-                              {memory.tags.length > 3 && (
-                                <Badge
-                                  variant="outline"
-                                  className="text-xs bg-cutelist-primary/10"
-                                >
-                                  +{memory.tags.length - 3}
-                                </Badge>
-                              )}
-                            </div>
-                          )}
-                          <p className="text-xs text-gray-500 mt-2">
-                            {format(parseISO(memory.created_at), "MMM d, yyyy")}
-                          </p>
-                        </div>
-                      </Card>
-                    ))}
-                  </div>
-                )}
+                {renderMemoriesTab && renderMemoriesTab()}
               </TabsContent>
-
+              
               <TabsContent value="quotes">
-                {user && (
-                  <Card className="glass-card p-6 mb-8">
-                    <h2 className="text-xl font-semibold mb-4">Save New Quote</h2>
-                    <div className="space-y-4">
-                      <div>
-                        <label className="block text-sm font-medium mb-1">Quote</label>
-                        <Textarea
-                          value={quoteContent}
-                          onChange={(e) => setQuoteContent(e.target.value)}
-                          placeholder="Enter your favorite quote"
-                          className="bg-cutelist-dark/50 border-cutelist-primary/30 resize-none"
-                          rows={3}
-                        />
-                      </div>
-
-                      <div>
-                        <label className="block text-sm font-medium mb-1">
-                          Author (optional)
-                        </label>
-                        <Input
-                          value={quoteAuthor}
-                          onChange={(e) => setQuoteAuthor(e.target.value)}
-                          placeholder="Who said this quote?"
-                          className="bg-cutelist-dark/50 border-cutelist-primary/30"
-                        />
-                      </div>
-
-                      <div className="pt-2">
-                        <Button
-                          onClick={handleCreateQuote}
-                          disabled={!quoteContent.trim()}
-                          className="w-full bg-cutelist-primary hover:bg-cutelist-secondary"
-                        >
-                          Save Quote
-                        </Button>
-                      </div>
-                    </div>
-                  </Card>
-                )}
-
-                <h2 className="text-2xl font-semibold mb-4">Your Quotes</h2>
-
-                {loading ? (
-                  <div className="space-y-4">
-                    {[1, 2, 3].map((i) => (
-                      <Card key={i} className="glass-card p-6">
-                        <Skeleton className="h-16 w-full mb-3" />
-                        <Skeleton className="h-4 w-1/3" />
-                      </Card>
-                    ))}
-                  </div>
-                ) : !user ? (
-                  <div className="text-center py-10">
-                    <Quote className="h-16 w-16 mx-auto text-gray-500 mb-4" />
-                    <h3 className="text-lg font-medium mb-2">Login to View Quotes</h3>
-                    <p className="text-gray-400 mb-4">
-                      Please login to view and save your quotes
-                    </p>
-                    <Button asChild>
-                      <a href="/profile">Login Now</a>
-                    </Button>
-                  </div>
-                ) : quotes.length === 0 ? (
-                  <div className="text-center py-10">
-                    <Quote className="h-16 w-16 mx-auto text-gray-500 mb-4" />
-                    <h3 className="text-lg font-medium mb-2">No Quotes Yet</h3>
-                    <p className="text-gray-400">Save your first quote to get started!</p>
-                  </div>
-                ) : (
-                  <div className="space-y-4">
-                    {quotes.map((quote) => (
-                      <Card key={quote.id} className="glass-card p-6">
-                        <div className="flex justify-between items-start">
-                          <div className="flex-1">
-                            <p className="text-lg italic">"{quote.content}"</p>
-                            {quote.author && (
-                              <p className="text-sm text-gray-400 mt-2">— {quote.author}</p>
-                            )}
-                            <p className="text-xs text-gray-500 mt-2">
-                              {format(parseISO(quote.created_at), "MMM d, yyyy")}
-                            </p>
-                          </div>
-                          <Button
-                            size="icon"
-                            variant="ghost"
-                            className="h-7 w-7"
-                            onClick={() => handleDeleteQuote(quote.id)}
-                          >
-                            <X className="h-4 w-4 text-gray-400" />
-                          </Button>
-                        </div>
-                      </Card>
-                    ))}
-                  </div>
-                )}
+                {renderQuotesTab && renderQuotesTab()}
               </TabsContent>
             </Tabs>
           </div>
         </main>
+        
+        {/* Add Memory Modal - Improved Upload UI */}
+        <Dialog open={isAddModalOpen} onOpenChange={setIsAddModalOpen}>
+          <DialogContent className="sm:max-w-md">
+            <DialogHeader>
+              <DialogTitle>Create Memory</DialogTitle>
+              <DialogDescription>
+                Capture a special moment to remember
+              </DialogDescription>
+            </DialogHeader>
+            {uploadProgress > 0 && uploadProgress < 100 ? (
+              <div className="py-10">
+                <div className="mb-2 flex justify-between text-sm">
+                  <span>Uploading image...</span>
+                  <span>{uploadProgress}%</span>
+                </div>
+                <div className="h-2 w-full bg-gray-700 rounded-full overflow-hidden">
+                  <div 
+                    className="h-full bg-cutelist-primary" 
+                    style={{ width: `${uploadProgress}%` }}
+                  />
+                </div>
+              </div>
+            ) : (
+              <div className="space-y-4 py-2">
+                <div className="space-y-2">
+                  <Label htmlFor="title">Title</Label>
+                  <Input
+                    id="title"
+                    placeholder="Give your memory a title"
+                    value={newMemory.title}
+                    onChange={(e) => setNewMemory({ ...newMemory, title: e.target.value })}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="description">Description</Label>
+                  <Textarea
+                    id="description"
+                    placeholder="What makes this memory special?"
+                    className="min-h-[100px]"
+                    value={newMemory.description}
+                    onChange={(e) => setNewMemory({ ...newMemory, description: e.target.value })}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="tags">Tags</Label>
+                  <div className="flex items-center">
+                    <AtSign className="mr-2 h-4 w-4 text-gray-500" />
+                    <Input
+                      id="tags"
+                      placeholder="summer, vacation, friends (comma separated)"
+                      value={newMemory.tags}
+                      onChange={(e) => setNewMemory({ ...newMemory, tags: e.target.value })}
+                    />
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="image">Image</Label>
+                  <input
+                    id="image-upload"
+                    type="file"
+                    accept="image/*"
+                    ref={fileInputRef}
+                    className="sr-only"
+                    onChange={handleFileChange}
+                  />
+                  <div 
+                    className={`flex flex-col items-center justify-center border-2 border-dashed rounded-lg p-4 transition-colors ${
+                      previewImage ? 'border-cutelist-primary/30' : 'border-gray-700 hover:border-gray-500'
+                    }`}
+                    onClick={() => fileInputRef.current?.click()}
+                  >
+                    {previewImage ? (
+                      <div className="relative w-full">
+                        <img
+                          src={previewImage}
+                          alt="Preview"
+                          className="w-full h-40 object-cover rounded"
+                        />
+                        <Button
+                          type="button"
+                          variant="destructive"
+                          size="icon"
+                          className="absolute top-2 right-2 h-8 w-8"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setPreviewImage(null);
+                            setNewMemory({ ...newMemory, image: null });
+                            if (fileInputRef.current) fileInputRef.current.value = '';
+                          }}
+                        >
+                          <X className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    ) : (
+                      <div className="flex flex-col items-center space-y-2 cursor-pointer p-8">
+                        <div className="rounded-full bg-cutelist-primary/20 p-3">
+                          <ImageIcon className="h-8 w-8 text-cutelist-primary" />
+                        </div>
+                        <span className="text-sm font-medium">Upload Image</span>
+                        <span className="text-xs text-gray-500">Click to browse or drag and drop</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
+            <div className="flex justify-end space-x-2 mt-4">
+              <Button 
+                variant="outline" 
+                onClick={() => {
+                  setIsAddModalOpen(false);
+                  setPreviewImage(null);
+                  setNewMemory({
+                    title: "",
+                    description: "",
+                    image: null,
+                    tags: "",
+                  });
+                }}
+                disabled={uploadProgress > 0 && uploadProgress < 100}
+              >
+                Cancel
+              </Button>
+              <Button 
+                onClick={handleCreateMemory}
+                disabled={
+                  createMemoryMutation.isPending || 
+                  (uploadProgress > 0 && uploadProgress < 100)
+                }
+              >
+                {createMemoryMutation.isPending ? "Creating..." : "Save Memory"}
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
+        
+        {/* View Memory Modal */}
+        <Dialog open={isViewModalOpen} onOpenChange={setIsViewModalOpen}>
+          <DialogContent className="sm:max-w-xl">
+            {activeMemory && (
+              <>
+                <div className="absolute top-2 right-2 flex space-x-1">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-7 w-7 text-gray-400 hover:text-white"
+                    onClick={() => toggleFavorite(activeMemory.id)}
+                  >
+                    <Heart
+                      className={`h-5 w-5 ${
+                        favorites.includes(activeMemory.id)
+                          ? "fill-red-500 text-red-500"
+                          : ""
+                      }`}
+                    />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-7 w-7 text-gray-400 hover:text-red-500"
+                    onClick={() => handleDeleteMemory(activeMemory.id)}
+                  >
+                    <Trash2 className="h-5 w-5" />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-7 w-7 text-gray-400 hover:text-white"
+                    onClick={() => setIsViewModalOpen(false)}
+                  >
+                    <X className="h-5 w-5" />
+                  </Button>
+                </div>
+                
+                <div className="pt-6">
+                  <div className="aspect-video mb-4 overflow-hidden rounded-lg">
+                    <img
+                      src={activeMemory.image_url}
+                      alt={activeMemory.title}
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                  
+                  <div className="flex items-center justify-between mb-4">
+                    <h2 className="text-2xl font-bold flex items-center">
+                      {activeMemory.title}
+                    </h2>
+                    <div className="text-sm text-gray-400 flex items-center">
+                      <CalendarIcon className="h-3 w-3 mr-1" />
+                      {format(new Date(activeMemory.created_at), "MMMM d, yyyy")}
+                    </div>
+                  </div>
+                  
+                  <p className="text-gray-300 mb-6">{activeMemory.description}</p>
+                  
+                  {activeMemory.tags && activeMemory.tags.length > 0 && (
+                    <div className="mb-4">
+                      <div className="flex items-center gap-2 mb-2">
+                        <Tag className="h-4 w-4" />
+                        <span className="font-medium">Tags</span>
+                      </div>
+                      <div className="flex flex-wrap gap-2">
+                        {activeMemory.tags.map((tag, i) => (
+                          <span
+                            key={i}
+                            className="text-sm px-2 py-1 bg-cutelist-primary/20 text-cutelist-primary rounded-full"
+                          >
+                            #{tag}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </>
+            )}
+          </DialogContent>
+        </Dialog>
+        
+        {/* Add Quote Modal */}
+        <Dialog open={isAddQuoteModalOpen} onOpenChange={setIsAddQuoteModalOpen}>
+          <DialogContent className="sm:max-w-md">
+            <DialogHeader>
+              <DialogTitle>Add Inspirational Quote</DialogTitle>
+              <DialogDescription>
+                Share your favorite quote with the community
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4 py-2">
+              <div className="space-y-2">
+                <Label htmlFor="content">Quote</Label>
+                <Textarea
+                  id="content"
+                  placeholder="Type your favorite quote here..."
+                  className="min-h-[120px]"
+                  value={newQuote.content}
+                  onChange={(e) => setNewQuote({ ...newQuote, content: e.target.value })}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="author">Author</Label>
+                <Input
+                  id="author"
+                  placeholder="Who said or wrote this quote?"
+                  value={newQuote.author}
+                  onChange={(e) => setNewQuote({ ...newQuote, author: e.target.value })}
+                />
+              </div>
+            </div>
+            <div className="flex justify-end space-x-2 mt-4">
+              <Button variant="outline" onClick={() => setIsAddQuoteModalOpen(false)}>
+                Cancel
+              </Button>
+              <Button onClick={handleCreateQuote} disabled={createQuoteMutation.isPending}>
+                {createQuoteMutation.isPending ? "Adding..." : "Add Quote"}
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
       </div>
     </ThemeProvider>
   );
-}
+};
+
+export default Memories;

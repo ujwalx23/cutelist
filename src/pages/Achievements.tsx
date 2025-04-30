@@ -28,102 +28,6 @@ const Achievements = () => {
     mostProductiveDay
   } = useAchievements();
 
-  // Function to render components in the correct order based on device
-  const renderComponents = () => {
-    if (isMobile) {
-      return (
-        <div className="space-y-6">
-          {/* Statistics first */}
-          <StatisticsCard 
-            isLoading={isLoading}
-            totalCompleted={totalCompleted}
-            todosCompleted={todosCompleted}
-            booksCompleted={booksCompleted}
-            pomodoroCompleted={pomodoroCompleted}
-            mostProductiveDay={mostProductiveDay}
-          />
-          
-          {/* Daily Achievements second */}
-          <DailyAchievements 
-            isLoading={isLoading}
-            selectedDate={selectedDate}
-            setSelectedDate={setSelectedDate}
-            tasksForSelectedDate={tasksForSelectedDate}
-          />
-          
-          {/* Activity Calendar third */}
-          <ActivityCalendar 
-            isLoading={isLoading} 
-            selectedDate={selectedDate} 
-            setSelectedDate={setSelectedDate} 
-            highlightedDates={highlightedDates} 
-          />
-          
-          {/* Achievement Badges last */}
-          <div className="glass-card p-5 rounded-xl">
-            <h2 className="text-xl font-semibold mb-4">Achievement Badges</h2>
-            <p className="text-gray-400 mb-4">Unlock badges by completing various tasks</p>
-            
-            <AchievementBadgesList
-              isLoading={isLoading}
-              todosCompleted={todosCompleted}
-              booksCompleted={booksCompleted}
-              pomodoroCompleted={pomodoroCompleted}
-              currentStreak={currentStreak}
-            />
-          </div>
-        </div>
-      );
-    } else {
-      // Desktop layout - grid with left and right columns
-      return (
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Left Column - Calendar & Stats */}
-          <div className="space-y-6 order-2 lg:order-1">
-            <ActivityCalendar 
-              isLoading={isLoading} 
-              selectedDate={selectedDate} 
-              setSelectedDate={setSelectedDate} 
-              highlightedDates={highlightedDates} 
-            />
-            
-            <StatisticsCard 
-              isLoading={isLoading}
-              totalCompleted={totalCompleted}
-              todosCompleted={todosCompleted}
-              booksCompleted={booksCompleted}
-              pomodoroCompleted={pomodoroCompleted}
-              mostProductiveDay={mostProductiveDay}
-            />
-          </div>
-          
-          {/* Right Column - Daily Achievements & Badges */}
-          <div className="lg:col-span-2 space-y-6 order-1 lg:order-2">
-            <DailyAchievements 
-              isLoading={isLoading}
-              selectedDate={selectedDate}
-              setSelectedDate={setSelectedDate}
-              tasksForSelectedDate={tasksForSelectedDate}
-            />
-            
-            <div className="glass-card p-5 rounded-xl">
-              <h2 className="text-xl font-semibold mb-4">Achievement Badges</h2>
-              <p className="text-gray-400 mb-4">Unlock badges by completing various tasks</p>
-              
-              <AchievementBadgesList
-                isLoading={isLoading}
-                todosCompleted={todosCompleted}
-                booksCompleted={booksCompleted}
-                pomodoroCompleted={pomodoroCompleted}
-                currentStreak={currentStreak}
-              />
-            </div>
-          </div>
-        </div>
-      );
-    }
-  };
-
   return (
     <ThemeProvider>
       <div className="min-h-screen flex flex-col bg-cutelist-dark">
@@ -143,8 +47,49 @@ const Achievements = () => {
               )}
             </div>
             
-            {/* Render components in the correct order based on device */}
-            {renderComponents()}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              {/* Left Column - Calendar & Stats */}
+              <div className="space-y-6 order-2 lg:order-1">
+                <ActivityCalendar 
+                  isLoading={isLoading} 
+                  selectedDate={selectedDate} 
+                  setSelectedDate={setSelectedDate} 
+                  highlightedDates={highlightedDates} 
+                />
+                
+                <StatisticsCard 
+                  isLoading={isLoading}
+                  totalCompleted={totalCompleted}
+                  todosCompleted={todosCompleted}
+                  booksCompleted={booksCompleted}
+                  pomodoroCompleted={pomodoroCompleted}
+                  mostProductiveDay={mostProductiveDay}
+                />
+              </div>
+              
+              {/* Right Column - Daily Achievements & Badges */}
+              <div className="lg:col-span-2 space-y-6 order-1 lg:order-2">
+                <DailyAchievements 
+                  isLoading={isLoading}
+                  selectedDate={selectedDate}
+                  setSelectedDate={setSelectedDate}
+                  tasksForSelectedDate={tasksForSelectedDate}
+                />
+                
+                <div className="glass-card p-5 rounded-xl">
+                  <h2 className="text-xl font-semibold mb-4">Achievement Badges</h2>
+                  <p className="text-gray-400 mb-4">Unlock badges by completing various tasks</p>
+                  
+                  <AchievementBadgesList
+                    isLoading={isLoading}
+                    todosCompleted={todosCompleted}
+                    booksCompleted={booksCompleted}
+                    pomodoroCompleted={pomodoroCompleted}
+                    currentStreak={currentStreak}
+                  />
+                </div>
+              </div>
+            </div>
           </div>
         </main>
       </div>

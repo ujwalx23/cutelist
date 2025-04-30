@@ -90,7 +90,7 @@ const CalendarPage = () => {
               </p>
 
               <div className="w-full grid grid-cols-1 lg:grid-cols-3 gap-8">
-                <div className="glass-card p-6 rounded-xl overflow-auto">
+                <div className="glass-card p-6 rounded-xl">
                   <Calendar
                     mode="single"
                     selected={date}
@@ -272,5 +272,3 @@ const CalendarPage = () => {
     </ThemeProvider>
   );
 };
-
-export default CalendarPage;

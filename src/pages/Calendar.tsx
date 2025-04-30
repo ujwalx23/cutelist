@@ -272,3 +272,6 @@ const CalendarPage = () => {
     </ThemeProvider>
   );
 };
+
+// Export the component as default
+export default CalendarPage;

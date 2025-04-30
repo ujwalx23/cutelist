@@ -33,6 +33,36 @@ export type Database = {
         }
         Relationships: []
       }
+      memories: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          image_url: string | null
+          tags: string[] | null
+          title: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          image_url?: string | null
+          tags?: string[] | null
+          title: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          image_url?: string | null
+          tags?: string[] | null
+          title?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -62,18 +92,21 @@ export type Database = {
       }
       quotes: {
         Row: {
+          author: string | null
           content: string
           created_at: string
           id: string
           user_id: string
         }
         Insert: {
+          author?: string | null
           content: string
           created_at?: string
           id?: string
           user_id: string
         }
         Update: {
+          author?: string | null
           content?: string
           created_at?: string
           id?: string

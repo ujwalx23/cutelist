@@ -7,11 +7,14 @@ import { ThemeProvider } from "@/components/ThemeProvider";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
+import { AuthModal } from "@/components/auth/AuthModal";
+import { useState } from "react";
 
 const Index = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const [showAuthModal, setShowAuthModal] = useState(false);
   
   return (
     <ThemeProvider>
@@ -25,7 +28,9 @@ const Index = () => {
               {!user ? (
                 <div className="text-center mb-8">
                   <p className="mb-4 text-gray-300">Sign in to create and manage your tasks</p>
-            
+                  <Button onClick={() => setShowAuthModal(true)} className="px-6">
+                    Sign in
+                  </Button>
                 </div>
               ) : (
                 <TaskContainer />
@@ -37,6 +42,10 @@ const Index = () => {
           <p>CuteList - Your adorable task manager</p>
         </footer>
       </div>
+      <AuthModal
+        isOpen={showAuthModal}
+        onClose={() => setShowAuthModal(false)}
+      />
     </ThemeProvider>
   );
 };

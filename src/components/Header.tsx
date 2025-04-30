@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -30,6 +31,7 @@ import {
   SheetContent,
   SheetTrigger,
 } from "@/components/ui/sheet";
+import { Logo } from "./Logo";
 
 export function Header() {
   const [showAuthModal, setShowAuthModal] = useState(false);
@@ -174,15 +176,8 @@ export function Header() {
       <div className="container flex h-14 max-w-screen-2xl items-center">
         <div className="flex flex-1 items-center justify-between space-x-2 md:justify-end">
           <div className="w-full flex justify-between items-center">
-            <Link to="/" className="flex items-center space-x-2">
-              <img 
-                src="/lovable-uploads/cd11890b-c610-464d-b694-2b59ee09a21d.png"
-                alt="CuteList Logo"
-                className="h-8 w-8"
-              />
-              <span className="hidden font-bold sm:inline-block">
-                CuteList
-              </span>
+            <Link to="/" className="flex items-center">
+              <Logo />
             </Link>
             
             {isMobile ? (
@@ -223,7 +218,7 @@ export function Header() {
                 <MobileNavigation />
               </div>
             ) : (
-              <nav className="hidden md:flex items-center space-x-4">
+              <nav className="flex items-center space-x-4">
                 <NavLinks />
                 
                 {user ? (

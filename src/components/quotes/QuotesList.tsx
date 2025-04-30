@@ -7,7 +7,6 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { AddQuoteForm } from "./AddQuoteForm";
-import { Quote } from "@/types/memory";
 
 export function QuotesList() {
   const [showAddForm, setShowAddForm] = useState(false);
@@ -26,7 +25,7 @@ export function QuotesList() {
         console.error("Error fetching quotes:", error);
         throw error;
       }
-      return data as Quote[] || [];
+      return data || [];
     },
     refetchOnWindowFocus: false,
   });

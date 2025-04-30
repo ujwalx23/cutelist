@@ -6,7 +6,6 @@ import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input"; 
 import { Label } from "@/components/ui/label";
 import { useAuth } from "@/contexts/AuthContext";
-import { Quote } from "@/types/memory";
 
 interface AddQuoteFormProps {
   onSuccess: () => void;
@@ -28,7 +27,7 @@ export function AddQuoteForm({ onSuccess, onCancel }: AddQuoteFormProps) {
 
     setLoading(true);
     try {
-      const { error, data } = await supabase
+      const { error } = await supabase
         .from('quotes')
         .insert([{ content, author: author.trim() || null, user_id: user.id }]);
 

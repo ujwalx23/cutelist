@@ -1,4 +1,5 @@
 
+// Define interfaces for TimeSlot and Timetable
 export interface TimeSlot {
   id: string;
   day: string;

@@ -17,3 +17,6 @@ export interface Quote {
   author: string | null;
   created_at: string;
 }
+
+// Constants for memory limits
+export const MAX_MEMORIES_PHOTOS = 5;

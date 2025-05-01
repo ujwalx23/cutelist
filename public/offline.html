@@ -41,6 +41,18 @@
       font-size: 50px;
       margin-bottom: 20px;
     }
+    .button {
+      display: inline-block;
+      background: linear-gradient(to right, #9b87f5, #7fd1ae);
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 8px;
+      font-weight: bold;
+      cursor: pointer;
+      text-decoration: none;
+      margin-top: 10px;
+    }
   </style>
 </head>
 <body>
@@ -48,7 +60,16 @@
     <div class="icon">🌙</div>
     <h1>You're Offline</h1>
     <p>Don't worry! CuteList works offline. You can continue to view and modify your tasks, and they'll sync automatically when you're back online.</p>
-    <p>If you need to access specific features that require an internet connection, please check your connection and try again.</p>
+    <p>You're seeing this page because you tried to access a feature that requires an internet connection.</p>
+    <a href="/" class="button">Go to Home Page</a>
   </div>
+  <script>
+    // Check if we're back online periodically
+    setInterval(() => {
+      if (navigator.onLine) {
+        window.location.reload();
+      }
+    }, 5000);
+  </script>
 </body>
 </html>

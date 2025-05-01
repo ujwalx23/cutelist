@@ -1,11 +1,12 @@
-
-const CACHE_NAME = 'cutelist-v4';
+const CACHE_NAME = 'cutelist-v5';
 const urlsToCache = [
   '/',
   '/index.html',
   '/manifest.json',
-  '/lovable-uploads/87c72f50-f842-4d3f-b009-26dd2477ed51.png',
-  '/offline.html'
+  '/lovable-uploads/e8d0228f-76c5-4898-8b2c-1ef215ce52b4.png',
+  '/offline.html',
+  '/src/main.tsx',
+  '/src/index.css'
 ];
 
 // Install event - cache assets
@@ -17,6 +18,8 @@ self.addEventListener('install', (event) => {
         return cache.addAll(urlsToCache);
       })
   );
+  // Activate immediately
+  self.skipWaiting();
 });
 
 // Activate event - clean old caches
@@ -33,17 +36,30 @@ self.addEventListener('activate', (event) => {
       );
     })
   );
+  // Ensure the service worker takes control immediately
+  return self.clients.claim();
 });
 
 // Fetch event with network-first strategy for API requests, cache-first for assets
 self.addEventListener('fetch', (event) => {
   const url = new URL(event.request.url);
   
-  // For API requests (to Supabase), try network first, then fall back to offline page
+  // Skip non-GET requests
+  if (event.request.method !== 'GET') return;
+  
+  // For API requests (to Supabase), try network first, then fall back to offline handling
   if (url.pathname.includes('/rest/') || url.pathname.includes('/auth/')) {
     event.respondWith(
       fetch(event.request)
-        .catch(() => {
+        .then(response => {
+          return response;
+        })
+        .catch(async () => {
+          // If offline and this is a task-related API call, handle it locally
+          if (url.pathname.includes('/rest/v1/todos')) {
+            // Use IndexedDB to handle offline todos actions
+            return handleOfflineTodosRequest(event.request);
+          }
           return caches.match('/offline.html') || caches.match('/');
         })
     );
@@ -96,16 +112,198 @@ self.addEventListener('fetch', (event) => {
   );
 });
 
+// Handle offline todos requests using IndexedDB
+async function handleOfflineTodosRequest(request) {
+  // Extract request data
+  const url = new URL(request.url);
+  const method = request.method;
+  
+  try {
+    // Open or create the offline-actions database
+    const db = await openDB();
+    
+    if (method === 'POST') {
+      // Store the new task in IndexedDB for later sync
+      const taskData = await request.clone().json();
+      const offlineId = 'offline_' + Date.now();
+      
+      await db.add('offlineTodos', {
+        id: offlineId,
+        action: 'add',
+        data: taskData,
+        timestamp: Date.now()
+      });
+      
+      // Return a mock successful response
+      return new Response(JSON.stringify({
+        id: offlineId,
+        content: taskData.content,
+        is_complete: false,
+        created_at: new Date().toISOString()
+      }), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' }
+      });
+    }
+    
+    else if (method === 'PATCH' || method === 'PUT') {
+      // Extract ID from URL
+      const pathParts = url.pathname.split('/');
+      const id = pathParts[pathParts.length - 1];
+      const taskData = await request.clone().json();
+      
+      await db.add('offlineTodos', {
+        id: id,
+        action: 'update',
+        data: taskData,
+        timestamp: Date.now()
+      });
+      
+      return new Response(JSON.stringify({ success: true }), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' }
+      });
+    }
+    
+    else if (method === 'DELETE') {
+      // Extract ID from URL
+      const pathParts = url.pathname.split('/');
+      const id = pathParts[pathParts.length - 1];
+      
+      await db.add('offlineTodos', {
+        id: id,
+        action: 'delete',
+        timestamp: Date.now()
+      });
+      
+      return new Response(JSON.stringify({ success: true }), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' }
+      });
+    }
+    
+    return new Response(JSON.stringify({ error: 'Unsupported method' }), {
+      status: 400,
+      headers: { 'Content-Type': 'application/json' }
+    });
+  } catch (error) {
+    return new Response(JSON.stringify({ error: error.message }), {
+      status: 500,
+      headers: { 'Content-Type': 'application/json' }
+    });
+  }
+}
+
+// Function to open IndexedDB
+function openDB() {
+  return new Promise((resolve, reject) => {
+    const request = indexedDB.open('cutelist-offline', 1);
+    
+    request.onupgradeneeded = (event) => {
+      const db = event.target.result;
+      if (!db.objectStoreNames.contains('offlineTodos')) {
+        db.createObjectStore('offlineTodos', { keyPath: 'timestamp' });
+      }
+      if (!db.objectStoreNames.contains('cachedTodos')) {
+        db.createObjectStore('cachedTodos', { keyPath: 'id' });
+      }
+    };
+    
+    request.onsuccess = (event) => {
+      resolve(event.target.result);
+    };
+    
+    request.onerror = (event) => {
+      reject(event.target.error);
+    };
+  });
+}
+
 // Add sync event for background syncing when connection is restored
 self.addEventListener('sync', (event) => {
   if (event.tag === 'sync-todos') {
-    event.waitUntil(syncData('todos'));
+    event.waitUntil(syncOfflineTodos());
   } else if (event.tag === 'sync-memories') {
     event.waitUntil(syncData('memories'));
   } else if (event.tag === 'sync-pomodoro') {
     event.waitUntil(syncData('pomodoro'));
   }
 });
+
+// Function to sync offline todos when back online
+async function syncOfflineTodos() {
+  try {
+    const db = await openDB();
+    const tx = db.transaction('offlineTodos', 'readwrite');
+    const store = tx.objectStore('offlineTodos');
+    
+    // Get all offline actions
+    const offlineActions = await store.getAll();
+    
+    // Process each action
+    for (const action of offlineActions) {
+      try {
+        let url, options;
+        
+        switch(action.action) {
+          case 'add':
+            url = new URL(location.origin + '/rest/v1/todos');
+            options = {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${self.SUPABASE_AUTH_TOKEN}` // We'll need to pass this from the main app
+              },
+              body: JSON.stringify(action.data)
+            };
+            break;
+            
+          case 'update':
+            url = new URL(`${location.origin}/rest/v1/todos?id=eq.${action.id}`);
+            options = {
+              method: 'PATCH',
+              headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${self.SUPABASE_AUTH_TOKEN}`
+              },
+              body: JSON.stringify(action.data)
+            };
+            break;
+            
+          case 'delete':
+            url = new URL(`${location.origin}/rest/v1/todos?id=eq.${action.id}`);
+            options = {
+              method: 'DELETE',
+              headers: {
+                'Authorization': `Bearer ${self.SUPABASE_AUTH_TOKEN}`
+              }
+            };
+            break;
+        }
+        
+        // Send the request to the server
+        const response = await fetch(url, options);
+        
+        if (!response.ok) {
+          throw new Error(`Server responded with status: ${response.status}`);
+        }
+        
+        // If successful, remove the action from IndexedDB
+        await store.delete(action.timestamp);
+        
+      } catch (error) {
+        console.error('Failed to sync action:', action, error);
+        // Keep failed actions in the store for next sync attempt
+      }
+    }
+    
+    await tx.complete;
+    console.log('Sync completed');
+    
+  } catch (error) {
+    console.error('Sync failed:', error);
+  }
+}
 
 // Function to sync data when back online
 async function syncData(dataType) {
@@ -128,6 +326,11 @@ async function syncData(dataType) {
 self.addEventListener('message', (event) => {
   if (event.data && event.data.type === 'SKIP_WAITING') {
     self.skipWaiting();
+  }
+  
+  // Store auth token for later use during sync
+  if (event.data && event.data.type === 'SET_AUTH_TOKEN') {
+    self.SUPABASE_AUTH_TOKEN = event.data.token;
   }
 });
 

@@ -20,7 +20,7 @@ interface BookItem {
 const Books = () => {
   const [books, setBooks] = useState<BookItem[]>([
     { id: "book1", title: "White Nights", author: "Fyodor Dostoevsky", year: "1848", read: false },
-    { id: "book2", title: "Harry Potter", author: "J.K. Rowling", year: "1997", read: true },
+    { id: "book2", title: "Harry Potter", author: "J.K. Rowling", year: "1997", read: false },
     { id: "book3", title: "To Kill a Mockingbird", author: "Harper Lee", year: "1960", read: false },
   ]);
   const [title, setTitle] = useState("");

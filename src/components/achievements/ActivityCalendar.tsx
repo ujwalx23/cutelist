@@ -3,6 +3,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Calendar } from "@/components/ui/calendar";
 import { Skeleton } from "@/components/ui/skeleton";
 import { CalendarCheck2 } from "lucide-react";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 interface ActivityCalendarProps {
   isLoading: boolean;
@@ -17,6 +18,8 @@ const ActivityCalendar = ({
   setSelectedDate,
   highlightedDates
 }: ActivityCalendarProps) => {
+  const isMobile = useIsMobile();
+
   return (
     <Card className="glass-card">
       <CardHeader>
@@ -28,18 +31,18 @@ const ActivityCalendar = ({
           Days with completed tasks are highlighted
         </CardDescription>
       </CardHeader>
-      <CardContent className="overflow-x-auto pb-1">
+      <CardContent className={`pb-1 ${isMobile ? 'px-1' : 'px-3'}`}>
         {isLoading ? (
           <div className="space-y-2">
             <Skeleton className="h-[200px] w-full" />
           </div>
         ) : (
-          <div className="min-w-[240px]">
+          <div className="min-w-[240px] max-w-full overflow-hidden">
             <Calendar
               mode="single"
               selected={selectedDate}
               onSelect={setSelectedDate}
-              className="w-full"
+              className={`w-full ${isMobile ? 'scale-[0.85] transform origin-top' : ''}`}
               modifiers={{
                 highlighted: highlightedDates,
               }}

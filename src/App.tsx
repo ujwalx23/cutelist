@@ -17,6 +17,8 @@ import Profile from "./pages/Profile";
 import Achievements from "./pages/Achievements";
 import Memories from "./pages/Memories";
 import { useState, useEffect } from "react";
+import { MessageCircle } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 const App = () => {
   // Create a client inside the component
@@ -37,6 +39,10 @@ const App = () => {
     }
   }, []);
   
+  const openChatbot = () => {
+    window.open("https://cutt.cx/wanderlust", "_blank");
+  };
+
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
@@ -57,6 +63,17 @@ const App = () => {
               <Route path="/memories" element={<Memories />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
+            
+            {/* Chatbot button that appears on all pages */}
+            <div className="fixed bottom-6 right-6 z-50">
+              <Button 
+                onClick={openChatbot}
+                className="rounded-full bg-cutelist-primary hover:bg-cutelist-secondary w-12 h-12 flex items-center justify-center shadow-lg"
+                aria-label="Chat with us"
+              >
+                <MessageCircle className="h-6 w-6" />
+              </Button>
+            </div>
           </BrowserRouter>
         </TooltipProvider>
       </AuthProvider>

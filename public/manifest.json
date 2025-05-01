@@ -12,25 +12,25 @@
   "prefer_related_applications": false,
   "icons": [
     {
-      "src": "/lovable-uploads/87c72f50-f842-4d3f-b009-26dd2477ed51.png",
+      "src": "/lovable-uploads/e8d0228f-76c5-4898-8b2c-1ef215ce52b4.png",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "/lovable-uploads/87c72f50-f842-4d3f-b009-26dd2477ed51.png",
+      "src": "/lovable-uploads/e8d0228f-76c5-4898-8b2c-1ef215ce52b4.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "/lovable-uploads/87c72f50-f842-4d3f-b009-26dd2477ed51.png",
+      "src": "/lovable-uploads/e8d0228f-76c5-4898-8b2c-1ef215ce52b4.png",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "maskable"
     },
     {
-      "src": "/lovable-uploads/87c72f50-f842-4d3f-b009-26dd2477ed51.png",
+      "src": "/lovable-uploads/e8d0228f-76c5-4898-8b2c-1ef215ce52b4.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "maskable"
@@ -40,34 +40,34 @@
     {
       "name": "Tasks",
       "url": "/",
-      "icons": [{ "src": "/lovable-uploads/87c72f50-f842-4d3f-b009-26dd2477ed51.png", "sizes": "96x96" }]
+      "icons": [{ "src": "/lovable-uploads/e8d0228f-76c5-4898-8b2c-1ef215ce52b4.png", "sizes": "96x96" }]
     },
     {
       "name": "Calendar",
       "url": "/calendar",
-      "icons": [{ "src": "/lovable-uploads/87c72f50-f842-4d3f-b009-26dd2477ed51.png", "sizes": "96x96" }]
+      "icons": [{ "src": "/lovable-uploads/e8d0228f-76c5-4898-8b2c-1ef215ce52b4.png", "sizes": "96x96" }]
     },
     {
       "name": "Achievements",
       "url": "/achievements",
-      "icons": [{ "src": "/lovable-uploads/87c72f50-f842-4d3f-b009-26dd2477ed51.png", "sizes": "96x96" }]
+      "icons": [{ "src": "/lovable-uploads/e8d0228f-76c5-4898-8b2c-1ef215ce52b4.png", "sizes": "96x96" }]
     },
     {
       "name": "Pomodoro",
       "url": "/pomodoro",
-      "icons": [{ "src": "/lovable-uploads/87c72f50-f842-4d3f-b009-26dd2477ed51.png", "sizes": "96x96" }]
+      "icons": [{ "src": "/lovable-uploads/e8d0228f-76c5-4898-8b2c-1ef215ce52b4.png", "sizes": "96x96" }]
     }
   ],
   "screenshots": [
     {
-      "src": "/lovable-uploads/87c72f50-f842-4d3f-b009-26dd2477ed51.png",
+      "src": "/lovable-uploads/e8d0228f-76c5-4898-8b2c-1ef215ce52b4.png",
       "sizes": "2880x1800",
       "type": "image/png",
       "form_factor": "wide",
       "label": "CuteList Dashboard"
     },
     {
-      "src": "/lovable-uploads/87c72f50-f842-4d3f-b009-26dd2477ed51.png",
+      "src": "/lovable-uploads/e8d0228f-76c5-4898-8b2c-1ef215ce52b4.png",
       "sizes": "750x1334",
       "type": "image/png",
       "form_factor": "narrow",

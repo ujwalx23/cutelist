@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Header } from "@/components/Header";
@@ -12,7 +11,7 @@ import { Label } from "@/components/ui/label";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { User, CheckCircle2, Book, Calendar as CalendarIcon, ClipboardCheck, MessageCircle } from "lucide-react";
+import { User, CheckCircle2, Book, Flame, ClipboardCheck, MessageCircle } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 
 interface ProfileData {
@@ -40,7 +39,7 @@ const Profile = () => {
   });
 
   const openChatbot = () => {
-    window.open("https://cutt.cx/wanderlust", "_blank");
+    window.open("https://cdn.botpress.cloud/webchat/v2.4/shareable.html?configUrl=https://files.bpcontent.cloud/2025/04/30/11/20250430112856-NCNEDXT4.json", "_blank");
   };
 
   // Fetch user statistics
@@ -263,6 +262,14 @@ const Profile = () => {
                         placeholder="Tell us about yourself"
                       />
                     </div>
+                    <div className="flex justify-end">
+                      <Button
+                        onClick={updateProfile}
+                        disabled={loading}
+                      >
+                        {loading ? "Saving..." : "Save Changes"}
+                      </Button>
+                    </div>
                   </div>
                 </TabsContent>
                 
@@ -303,44 +310,29 @@ const Profile = () => {
                         <Book className="h-5 w-5 text-cutelist-primary" />
                       </div>
                       <div>
-                        <h3 className="font-medium text-cutelist-primary">Quotes Shared</h3>
+                        <h3 className="font-medium text-cutelist-primary">Books Read</h3>
                         <p className="text-3xl font-bold mt-1">{statsLoading ? "..." : userStats.quotes}</p>
                         <p className="text-sm text-gray-300 mt-1">
-                          Inspirational quotes you've added
+                          Books you've finished reading
                         </p>
                       </div>
                     </div>
                     
                     <div className="bg-cutelist-dark/50 p-4 rounded-lg flex items-start">
                       <div className="bg-cutelist-primary/20 p-2 rounded-full mr-3">
-                        <CalendarIcon className="h-5 w-5 text-cutelist-primary" />
+                        <Flame className="h-5 w-5 text-cutelist-primary" />
                       </div>
                       <div>
-                        <h3 className="font-medium text-cutelist-primary">Active Days</h3>
-                        <p className="text-3xl font-bold mt-1">Coming Soon</p>
+                        <h3 className="font-medium text-cutelist-primary">Current Streak</h3>
+                        <p className="text-3xl font-bold mt-1">{statsLoading ? "..." : "3"}</p>
                         <p className="text-sm text-gray-300 mt-1">
-                          Days you've been active on the app
+                          Days you've been active in a row
                         </p>
                       </div>
                     </div>
                   </div>
                 </TabsContent>
               </Tabs>
-
-              <CardFooter className="flex justify-end gap-2 p-6">
-                <Button
-                  variant="outline"
-                  onClick={() => navigate("/")}
-                >
-                  Cancel
-                </Button>
-                <Button
-                  onClick={updateProfile}
-                  disabled={loading}
-                >
-                  {loading ? "Saving..." : "Save Changes"}
-                </Button>
-              </CardFooter>
             </Card>
           </div>
         </main>

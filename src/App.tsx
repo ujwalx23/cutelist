@@ -40,7 +40,7 @@ const App = () => {
   }, []);
   
   const openChatbot = () => {
-    window.open("https://cutt.cx/wanderlust", "_blank");
+    window.open("https://cdn.botpress.cloud/webchat/v2.4/shareable.html?configUrl=https://files.bpcontent.cloud/2025/04/30/11/20250430112856-NCNEDXT4.json", "_blank");
   };
 
   return (

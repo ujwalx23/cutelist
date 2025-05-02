@@ -32,12 +32,7 @@ const Books = () => {
   useEffect(() => {
     const loadBooks = async () => {
       if (!user) {
-        // Use demo data when not logged in
-        setBooks([
-          { id: "book1", title: "White Nights", author: "Fyodor Dostoevsky", year: "1848", read: false },
-          { id: "book2", title: "Harry Potter", author: "J.K. Rowling", year: "1997", read: false },
-          { id: "book3", title: "To Kill a Mockingbird", author: "Harper Lee", year: "1960", read: false },
-        ]);
+        setBooks([]);
         setIsLoading(false);
         return;
       }
@@ -52,16 +47,11 @@ const Books = () => {
 
         if (error) {
           console.error('Error loading books:', error);
-          // Fall back to demo data
-          setBooks([
-            { id: "book1", title: "White Nights", author: "Fyodor Dostoevsky", year: "1848", read: false },
-            { id: "book2", title: "Harry Potter", author: "J.K. Rowling", year: "1997", read: false },
-            { id: "book3", title: "To Kill a Mockingbird", author: "Harper Lee", year: "1960", read: false },
-          ]);
+          setBooks([]);
           return;
         }
 
-        if (data && data.length > 0) {
+        if (data) {
           const formattedBooks = data.map(book => ({
             id: book.id,
             title: book.title,
@@ -71,20 +61,11 @@ const Books = () => {
           }));
           setBooks(formattedBooks);
         } else {
-          // No books found, use demo data
-          setBooks([
-            { id: "book1", title: "White Nights", author: "Fyodor Dostoevsky", year: "1848", read: false },
-            { id: "book2", title: "Harry Potter", author: "J.K. Rowling", year: "1997", read: false },
-            { id: "book3", title: "To Kill a Mockingbird", author: "Harper Lee", year: "1960", read: false },
-          ]);
+          setBooks([]);
         }
       } catch (err) {
         console.error('Error fetching books:', err);
-        setBooks([
-          { id: "book1", title: "White Nights", author: "Fyodor Dostoevsky", year: "1848", read: false },
-          { id: "book2", title: "Harry Potter", author: "J.K. Rowling", year: "1997", read: false },
-          { id: "book3", title: "To Kill a Mockingbird", author: "Harper Lee", year: "1960", read: false },
-        ]);
+        setBooks([]);
       } finally {
         setIsLoading(false);
       }

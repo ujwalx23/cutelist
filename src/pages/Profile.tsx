@@ -25,6 +25,7 @@ interface UserStats {
   totalTasks: number;
   quotes: number;
   memories: number;
+  booksRead: number;
 }
 
 const Profile = () => {
@@ -43,10 +44,10 @@ const Profile = () => {
   };
 
   // Fetch user statistics
-  const { data: userStats = { completedTasks: 0, totalTasks: 0, quotes: 0, memories: 0 }, isLoading: statsLoading } = useQuery({
+  const { data: userStats = { completedTasks: 0, totalTasks: 0, quotes: 0, memories: 0, booksRead: 0 }, isLoading: statsLoading } = useQuery({
     queryKey: ['userStats', user?.id],
     queryFn: async () => {
-      if (!user) return { completedTasks: 0, totalTasks: 0, quotes: 0, memories: 0 };
+      if (!user) return { completedTasks: 0, totalTasks: 0, quotes: 0, memories: 0, booksRead: 0 };
       
       try {
         // Fetch completed tasks count
@@ -68,15 +69,27 @@ const Profile = () => {
           
         if (quotesError) throw quotesError;
         
+        // Fetch books read count
+        const { data: booksData, error: booksError } = await supabase
+          .from("books")
+          .select("*")
+          .eq("user_id", user.id)
+          .eq("read", true);
+          
+        const booksRead = booksData ? booksData.length : 0;
+        
+        if (booksError) throw booksError;
+        
         return {
           completedTasks,
           totalTasks,
           quotes: quotesCount || 0,
           memories: 0, // Placeholder as memories table doesn't exist yet
+          booksRead
         };
       } catch (error) {
         console.error("Error fetching user stats:", error);
-        return { completedTasks: 0, totalTasks: 0, quotes: 0, memories: 0 };
+        return { completedTasks: 0, totalTasks: 0, quotes: 0, memories: 0, booksRead: 0 };
       }
     },
     enabled: !!user
@@ -311,7 +324,7 @@ const Profile = () => {
                       </div>
                       <div>
                         <h3 className="font-medium text-cutelist-primary">Books Read</h3>
-                        <p className="text-3xl font-bold mt-1">{statsLoading ? "..." : userStats.quotes}</p>
+                        <p className="text-3xl font-bold mt-1">{statsLoading ? "..." : userStats.booksRead}</p>
                         <p className="text-sm text-gray-300 mt-1">
                           Books you've finished reading
                         </p>

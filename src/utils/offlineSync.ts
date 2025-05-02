@@ -10,15 +10,19 @@ export const registerServiceWorker = async () => {
       const registration = await navigator.serviceWorker.register('/service-worker.js');
       console.log('ServiceWorker registration successful with scope: ', registration.scope);
       
-      // Request background sync permission if supported
-      if ('permissions' in navigator && 'sync' in registration) {
-        const status = await navigator.permissions.query({
-          name: 'periodic-background-sync' as any,
-        });
-        if (status.state === 'granted') {
-          await registration.periodicSync.register('refresh-data', {
-            minInterval: 24 * 60 * 60 * 1000, // Once per day
-          }).catch(console.error);
+      // Check if background sync is supported before trying to use it
+      if ('permissions' in navigator && 'periodicSync' in registration) {
+        try {
+          const status = await navigator.permissions.query({
+            name: 'periodic-background-sync' as any,
+          });
+          if (status.state === 'granted') {
+            await (registration as any).periodicSync.register('refresh-data', {
+              minInterval: 24 * 60 * 60 * 1000, // Once per day
+            }).catch(console.error);
+          }
+        } catch (e) {
+          console.error('Periodic sync registration error:', e);
         }
       }
       
@@ -49,14 +53,16 @@ export const updateServiceWorkerAuth = async () => {
 // Request sync when online
 export const syncOfflineData = async () => {
   if ('serviceWorker' in navigator && 'SyncManager' in window) {
-    const registration = await navigator.serviceWorker.ready;
     try {
-      await registration.sync.register('sync-todos');
-      return true;
+      const registration = await navigator.serviceWorker.ready;
+      if ('sync' in registration) {
+        await (registration as any).sync.register('sync-todos');
+        return true;
+      }
     } catch (error) {
       console.error('Background sync failed:', error);
-      return false;
     }
+    return false;
   } else {
     console.log('Background Sync not supported');
     return false;
@@ -89,9 +95,9 @@ export function useOnlineStatus() {
 
 // Function to store task data locally
 export const storeLocalTasks = async (tasks: Task[]) => {
-  if (!localforage) return;
   try {
-    await localforage.setItem('cached-tasks', tasks);
+    // Using localStorage instead of localforage
+    localStorage.setItem('cached-tasks', JSON.stringify(tasks));
   } catch (e) {
     console.error('Failed to store tasks locally', e);
   }
@@ -99,15 +105,21 @@ export const storeLocalTasks = async (tasks: Task[]) => {
 
 // Function to retrieve local task data
 export const getLocalTasks = async (): Promise<Task[]> => {
-  if (!localforage) return [];
   try {
-    const tasks = await localforage.getItem<Task[]>('cached-tasks');
-    return tasks || [];
+    const tasksString = localStorage.getItem('cached-tasks');
+    return tasksString ? JSON.parse(tasksString) as Task[] : [];
   } catch (e) {
     console.error('Failed to get local tasks', e);
     return [];
   }
 };
+
+interface OfflineTodoItem {
+  id: string;
+  action: 'add' | 'update' | 'delete';
+  data?: any;
+  timestamp: number;
+}
 
 // Function to add a task when offline
 export const addOfflineTask = async (text: string, userId: string): Promise<Task | null> => {
@@ -122,7 +134,9 @@ export const addOfflineTask = async (text: string, userId: string): Promise<Task
     
     // Store for syncing later
     const db = await openDB();
-    await db.add('offlineTodos', {
+    const transaction = db.transaction('offlineTodos', 'readwrite');
+    const store = transaction.objectStore('offlineTodos');
+    store.add({
       id: offlineId,
       action: 'add',
       data: {
@@ -130,7 +144,7 @@ export const addOfflineTask = async (text: string, userId: string): Promise<Task
         user_id: userId
       },
       timestamp: Date.now()
-    });
+    } as OfflineTodoItem);
     
     // Add to local cache
     const localTasks = await getLocalTasks();
@@ -147,12 +161,14 @@ export const addOfflineTask = async (text: string, userId: string): Promise<Task
 export const toggleOfflineTask = async (id: string, completed: boolean): Promise<boolean> => {
   try {
     const db = await openDB();
-    await db.add('offlineTodos', {
+    const transaction = db.transaction('offlineTodos', 'readwrite');
+    const store = transaction.objectStore('offlineTodos');
+    store.add({
       id: id,
       action: 'update',
       data: { is_complete: completed },
       timestamp: Date.now()
-    });
+    } as OfflineTodoItem);
     
     // Update in local cache
     const localTasks = await getLocalTasks();
@@ -172,11 +188,13 @@ export const toggleOfflineTask = async (id: string, completed: boolean): Promise
 export const deleteOfflineTask = async (id: string): Promise<boolean> => {
   try {
     const db = await openDB();
-    await db.add('offlineTodos', {
+    const transaction = db.transaction('offlineTodos', 'readwrite');
+    const store = transaction.objectStore('offlineTodos');
+    store.add({
       id: id,
       action: 'delete',
       timestamp: Date.now()
-    });
+    } as OfflineTodoItem);
     
     // Remove from local cache
     const localTasks = await getLocalTasks();
@@ -195,8 +213,8 @@ function openDB(): Promise<IDBDatabase> {
   return new Promise((resolve, reject) => {
     const request = indexedDB.open('cutelist-offline', 1);
     
-    request.onupgradeneeded = (event) => {
-      const db = event.target.result;
+    request.onupgradeneeded = (event: IDBVersionChangeEvent) => {
+      const db = request.result;
       if (!db.objectStoreNames.contains('offlineTodos')) {
         db.createObjectStore('offlineTodos', { keyPath: 'timestamp' });
       }
@@ -205,12 +223,12 @@ function openDB(): Promise<IDBDatabase> {
       }
     };
     
-    request.onsuccess = (event) => {
-      resolve(event.target.result);
+    request.onsuccess = (event: Event) => {
+      resolve(request.result);
     };
     
-    request.onerror = (event) => {
-      reject(event.target.error);
+    request.onerror = (event: Event) => {
+      reject(request.error);
     };
   });
 }

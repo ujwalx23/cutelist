@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { format, parseISO, isSameDay } from "date-fns";
@@ -36,18 +37,33 @@ export const useAchievements = () => {
           
         if (todosError) throw todosError;
         
-        // We would fetch completed books and pomodoro from their respective tables
-        // This is placeholder for the demo
-        const completedBooks: CompletedTask[] = [];
+        // Fetch completed books
+        const { data: books, error: booksError } = await supabase
+          .from('books')
+          .select('id, title, created_at, updated_at')
+          .eq('user_id', user.id)
+          .eq('read', true);
+        
+        if (booksError) throw booksError;
+        
+        // Format completed books
+        const completedBooks = books ? books.map(book => ({
+          id: book.id,
+          content: book.title,
+          completed_at: book.updated_at || book.created_at,
+          type: 'book' as TaskType
+        })) : [];
+        
+        // Placeholder for pomodoro
         const completedPomodoro: CompletedTask[] = [];
         
         // Transform todo data to match our format
-        const formattedTodos = todos.map(todo => ({
+        const formattedTodos = todos ? todos.map(todo => ({
           id: todo.id,
           content: todo.content,
           completed_at: todo.updated_at || todo.created_at,
           type: 'todo' as TaskType
-        }));
+        })) : [];
         
         // Combine all completed tasks
         return [...formattedTodos, ...completedBooks, ...completedPomodoro];

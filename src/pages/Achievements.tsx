@@ -43,10 +43,10 @@ const Achievements = () => {
                 <h1 className="text-4xl font-bold text-gradient mb-2">Achievements</h1>
                 <p className="text-gray-400">Track your progress and celebrate your wins!</p>
               </div>
-              {currentStreak > 0 && (
+              {booksCompleted > 0 && (
                 <Badge variant="outline" className="px-3 py-2 bg-gradient-to-r from-cutelist-primary/20 to-cutelist-accent/20 border-cutelist-primary/30 text-white mt-4 md:mt-0">
                   <Trophy className="h-4 w-4 mr-1 text-yellow-400" />
-                  <span className="text-sm">Current streak: {currentStreak} days</span>
+                  <span className="text-sm">Books read: {booksCompleted}</span>
                 </Badge>
               )}
             </div>
@@ -64,7 +64,6 @@ const Achievements = () => {
                       booksCompleted={booksCompleted}
                       pomodoroCompleted={pomodoroCompleted}
                       mostProductiveDay={mostProductiveDay}
-                      currentStreak={currentStreak}
                     />
                   </div>
                   
@@ -119,7 +118,6 @@ const Achievements = () => {
                       booksCompleted={booksCompleted}
                       pomodoroCompleted={pomodoroCompleted}
                       mostProductiveDay={mostProductiveDay}
-                      currentStreak={currentStreak}
                     />
                   </div>
                   

@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Header } from "@/components/Header";
 import { ThemeProvider } from "@/components/ThemeProvider";
@@ -22,20 +21,7 @@ interface Event {
 
 const CalendarPage = () => {
   const [date, setDate] = useState<Date | undefined>(new Date());
-  const [events, setEvents] = useState<Event[]>([
-    { 
-      id: "event1", 
-      title: "Team Meeting", 
-      description: "Weekly team sync",
-      date: new Date(new Date().setDate(new Date().getDate() + 1))
-    },
-    { 
-      id: "event2", 
-      title: "Doctor's Appointment", 
-      description: "Annual checkup",
-      date: new Date(new Date().setDate(new Date().getDate() + 3))
-    },
-  ]);
+  const [events, setEvents] = useState<Event[]>([]);
   const [newEventTitle, setNewEventTitle] = useState("");
   const [newEventDescription, setNewEventDescription] = useState("");
   const { user } = useAuth();
@@ -70,7 +56,7 @@ const CalendarPage = () => {
   };
 
   const openChatbot = () => {
-    window.open("https://cutt.cx/wanderlust", "_blank");
+    window.open("https://cdn.botpress.cloud/webchat/v2.4/shareable.html?configUrl=https://files.bpcontent.cloud/2025/04/30/11/20250430112856-NCNEDXT4.json", "_blank");
   };
 
   // Filter events for the selected date

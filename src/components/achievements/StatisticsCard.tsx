@@ -10,7 +10,6 @@ interface StatisticsCardProps {
   booksCompleted: number;
   pomodoroCompleted: number;
   mostProductiveDay: { date: Date; count: number } | null;
-  currentStreak?: number;
 }
 
 const StatisticsCard = ({
@@ -19,8 +18,7 @@ const StatisticsCard = ({
   todosCompleted,
   booksCompleted,
   pomodoroCompleted,
-  mostProductiveDay,
-  currentStreak = 0
+  mostProductiveDay
 }: StatisticsCardProps) => {
   return (
     <Card className="glass-card">
@@ -51,12 +49,6 @@ const StatisticsCard = ({
             <div className="flex items-center justify-between">
               <span className="text-sm text-gray-400">Pomodoro sessions:</span>
               <span className="font-medium">{pomodoroCompleted}</span>
-            </div>
-            <div className="flex items-center justify-between mt-2 pt-2 border-t border-border/20">
-              <span className="text-sm text-gray-400">Current streak:</span>
-              <span className="font-medium">
-                {currentStreak} days
-              </span>
             </div>
             {mostProductiveDay && (
               <div className="flex items-center justify-between mt-2 pt-2 border-t border-border/20">

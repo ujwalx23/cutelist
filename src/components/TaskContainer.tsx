@@ -7,94 +7,61 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
-import { 
-  useOnlineStatus, 
-  storeLocalTasks, 
-  getLocalTasks,
-  addOfflineTask,
-  toggleOfflineTask,
-  deleteOfflineTask,
-  syncOfflineData
-} from "@/utils/offlineSync";
 
 export function TaskContainer() {
   const [tasks, setTasks] = useState<Task[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
   const { user } = useAuth();
-  const isOnline = useOnlineStatus();
 
-  // Load tasks from Supabase when online, from local storage when offline
+  // Load tasks from Supabase
   useEffect(() => {
-    if (!user) return;
+    if (!user) {
+      setIsLoading(false);
+      return;
+    }
     
     const loadTasks = async () => {
-      // Try to load from cache first for immediate display
-      const cachedTasks = await getLocalTasks();
-      if (cachedTasks.length > 0) {
-        setTasks(cachedTasks);
-      }
-      
-      // If online, fetch from Supabase and update cache
-      if (isOnline) {
-        try {
-          const { data, error } = await supabase
-            .from('todos')
-            .select('*')
-            .eq('user_id', user.id)
-            .order('created_at', { ascending: false });
+      setIsLoading(true);
+      try {
+        const { data, error } = await supabase
+          .from('todos')
+          .select('*')
+          .eq('user_id', user.id)
+          .order('created_at', { ascending: false });
 
-          if (error) {
-            console.error('Error loading tasks:', error);
-            return;
-          }
+        if (error) {
+          console.error('Error loading tasks:', error);
+          toast({
+            title: "Error loading tasks",
+            description: "Please try refreshing the page.",
+            variant: "destructive",
+          });
+          return;
+        }
 
-          const formattedTasks = data.map(task => ({
-            id: task.id,
-            text: task.content,
-            completed: task.is_complete || false,
-            createdAt: task.created_at,
-          }));
-          
-          setTasks(formattedTasks);
-          // Update the local cache
-          await storeLocalTasks(formattedTasks);
-          
-          // Try to sync any pending offline changes
-          await syncOfflineData();
-        } catch (err) {
-          console.error('Error fetching tasks:', err);
-          toast({
-            title: "Network Error",
-            description: "Using cached tasks while offline",
-          });
-        }
-      } else {
-        // If offline and no cached tasks, show message
-        if (cachedTasks.length === 0) {
-          toast({
-            title: "Offline Mode",
-            description: "You're working offline with no cached tasks",
-          });
-        }
+        const formattedTasks = data.map(task => ({
+          id: task.id,
+          text: task.content,
+          completed: task.is_complete || false,
+          createdAt: task.created_at,
+        }));
+        
+        setTasks(formattedTasks);
+      } catch (err) {
+        console.error('Error fetching tasks:', err);
+        toast({
+          title: "Network Error",
+          description: "Failed to load tasks. Please check your internet connection.",
+          variant: "destructive"
+        });
+      } finally {
+        setIsLoading(false);
       }
     };
 
     loadTasks();
-  }, [user, isOnline, toast]);
-
-  // Display online/offline status when it changes
-  useEffect(() => {
-    if (!user) return;
-    
-    toast({
-      title: isOnline ? "Online" : "Offline",
-      description: isOnline 
-        ? "Connected to the internet. Your changes will sync automatically." 
-        : "You're offline. Changes will sync when you reconnect.",
-      duration: 3000
-    });
-    
-  }, [isOnline, user, toast]);
+  }, [user, toast]);
 
   const addTask = async (text: string) => {
     if (!user) {
@@ -107,46 +74,33 @@ export function TaskContainer() {
     }
 
     try {
-      let newTask: Task | null = null;
-      
-      if (isOnline) {
-        // Online mode - add directly to Supabase
-        const { data, error } = await supabase
-          .from('todos')
-          .insert([{
-            content: text,
-            user_id: user.id,
-          }])
-          .select()
-          .single();
+      // Add directly to Supabase
+      const { data, error } = await supabase
+        .from('todos')
+        .insert([{
+          content: text,
+          user_id: user.id,
+        }])
+        .select()
+        .single();
 
-        if (error) throw error;
+      if (error) throw error;
 
-        newTask = {
-          id: data.id,
-          text: data.content,
-          completed: false,
-          createdAt: data.created_at,
-        };
-      } else {
-        // Offline mode - store locally for later sync
-        newTask = await addOfflineTask(text, user.id);
-        if (!newTask) throw new Error("Failed to add offline task");
-      }
+      const newTask: Task = {
+        id: data.id,
+        text: data.content,
+        completed: false,
+        createdAt: data.created_at,
+      };
       
-      setTasks((prev) => [newTask!, ...prev]);
-      
-      // Update local cache
-      const updatedTasks = [newTask!, ...tasks];
-      await storeLocalTasks(updatedTasks);
+      setTasks((prev) => [newTask, ...prev]);
       
       toast({
         title: "Task added!",
-        description: isOnline 
-          ? "Your new task has been added to your list." 
-          : "Task saved locally and will sync when you're back online.",
+        description: "Your new task has been added to your list.",
       });
     } catch (error) {
+      console.error('Error adding task:', error);
       toast({
         title: "Error",
         description: "Failed to add task. Please try again.",
@@ -162,34 +116,27 @@ export function TaskContainer() {
     if (!task) return;
 
     try {
-      if (isOnline) {
-        // Online mode - update in Supabase
-        const { error } = await supabase
-          .from('todos')
-          .update({ is_complete: !task.completed })
-          .eq('id', id);
+      // Update in Supabase
+      const { error } = await supabase
+        .from('todos')
+        .update({ is_complete: !task.completed })
+        .eq('id', id);
 
-        if (error) throw error;
-      } else {
-        // Offline mode - store change for later sync
-        await toggleOfflineTask(id, !task.completed);
-      }
+      if (error) throw error;
 
-      // Update state
+      // Update state after successful database update
       setTasks((prev) =>
         prev.map((t) =>
           t.id === id ? { ...t, completed: !t.completed } : t
         )
       );
-      
-      // Update local cache
-      const updatedTasks = tasks.map((t) =>
-        t.id === id ? { ...t, completed: !t.completed } : t
-      );
-      await storeLocalTasks(updatedTasks);
-      
     } catch (error) {
       console.error('Error toggling task:', error);
+      toast({
+        title: "Error",
+        description: "Failed to update task. Please try again.",
+        variant: "destructive",
+      });
     }
   };
 
@@ -197,33 +144,23 @@ export function TaskContainer() {
     if (!user) return;
 
     try {
-      if (isOnline) {
-        // Online mode - delete from Supabase
-        const { error } = await supabase
-          .from('todos')
-          .delete()
-          .eq('id', id);
+      // Delete from Supabase
+      const { error } = await supabase
+        .from('todos')
+        .delete()
+        .eq('id', id);
 
-        if (error) throw error;
-      } else {
-        // Offline mode - store for later sync
-        await deleteOfflineTask(id);
-      }
+      if (error) throw error;
 
-      // Update state
+      // Update state after successful database deletion
       setTasks((prev) => prev.filter((task) => task.id !== id));
-      
-      // Update local cache
-      const updatedTasks = tasks.filter((task) => task.id !== id);
-      await storeLocalTasks(updatedTasks);
       
       toast({
         title: "Task deleted!",
-        description: isOnline 
-          ? "Your task has been removed from your list." 
-          : "Task marked for deletion and will sync when online.",
+        description: "Your task has been removed from your list.",
       });
     } catch (error) {
+      console.error('Error deleting task:', error);
       toast({
         title: "Error",
         description: "Failed to delete task. Please try again.",
@@ -253,10 +190,10 @@ export function TaskContainer() {
     <div className="glass-card p-6 rounded-xl w-full max-w-md">
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-2xl font-bold text-center text-gradient">My Tasks</h2>
-        {!isOnline && (
-          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
-            Offline
-          </span>
+        {isLoading && (
+          <div className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+            Loading...
+          </div>
         )}
       </div>
       <TaskInput onAddTask={addTask} />

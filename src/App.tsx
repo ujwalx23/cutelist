@@ -16,58 +16,26 @@ import Notes from "./pages/Notes";
 import Profile from "./pages/Profile";
 import Achievements from "./pages/Achievements";
 import Memories from "./pages/Memories";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { MessageCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { registerServiceWorker, updateServiceWorkerAuth } from "@/utils/offlineSync";
 
 const App = () => {
   // Create a client inside the component
   const [queryClient] = useState(() => new QueryClient({
     defaultOptions: {
       queries: {
-        // Enable offline caching for all queries
-        cacheTime: 1000 * 60 * 60 * 24, // 24 hours
+        // Configure for reliable online experience
         staleTime: 1000 * 60 * 5, // 5 minutes
-        retry: false
+        retry: 3, // Retry failed requests 3 times
+        retryDelay: attemptIndex => Math.min(1000 * 2 ** attemptIndex, 30000), // Exponential backoff
       },
     },
   }));
   
-  // Register service worker for PWA
-  useEffect(() => {
-    const setupServiceWorker = async () => {
-      const registration = await registerServiceWorker();
-      if (registration) {
-        // Update auth token when available
-        await updateServiceWorkerAuth();
-      }
-    };
-    
-    setupServiceWorker();
-  }, []);
-  
   const openChatbot = () => {
     window.open("https://cdn.botpress.cloud/webchat/v2.4/shareable.html?configUrl=https://files.bpcontent.cloud/2025/04/30/11/20250430112856-NCNEDXT4.json", "_blank");
   };
-
-  // Add event listener for online/offline status
-  useEffect(() => {
-    const updateNetworkStatus = () => {
-      if (navigator.onLine) {
-        // Update auth token when back online
-        updateServiceWorkerAuth();
-      }
-    };
-    
-    window.addEventListener('online', updateNetworkStatus);
-    window.addEventListener('offline', updateNetworkStatus);
-    
-    return () => {
-      window.removeEventListener('online', updateNetworkStatus);
-      window.removeEventListener('offline', updateNetworkStatus);
-    };
-  }, []);
 
   return (
     <QueryClientProvider client={queryClient}>

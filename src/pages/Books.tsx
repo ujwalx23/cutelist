@@ -1,13 +1,14 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Header } from "@/components/Header";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Book, Plus, Search, Trash } from "lucide-react";
-import { generateId } from "@/lib/utils";
+import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { useToast } from "@/hooks/use-toast";
 
 interface BookItem {
   id: string;
@@ -18,43 +19,187 @@ interface BookItem {
 }
 
 const Books = () => {
-  const [books, setBooks] = useState<BookItem[]>([
-    { id: "book1", title: "White Nights", author: "Fyodor Dostoevsky", year: "1848", read: false },
-    { id: "book2", title: "Harry Potter", author: "J.K. Rowling", year: "1997", read: false },
-    { id: "book3", title: "To Kill a Mockingbird", author: "Harper Lee", year: "1960", read: false },
-  ]);
+  const [books, setBooks] = useState<BookItem[]>([]);
   const [title, setTitle] = useState("");
   const [author, setAuthor] = useState("");
   const [year, setYear] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
+  const [isLoading, setIsLoading] = useState(true);
   const { user } = useAuth();
+  const { toast } = useToast();
 
-  const addBook = () => {
-    if (title && author) {
-      const newBook = {
-        id: generateId(),
-        title,
-        author,
-        year,
-        read: false,
-      };
-      setBooks([...books, newBook]);
+  // Load books from database
+  useEffect(() => {
+    const loadBooks = async () => {
+      if (!user) {
+        // Use demo data when not logged in
+        setBooks([
+          { id: "book1", title: "White Nights", author: "Fyodor Dostoevsky", year: "1848", read: false },
+          { id: "book2", title: "Harry Potter", author: "J.K. Rowling", year: "1997", read: false },
+          { id: "book3", title: "To Kill a Mockingbird", author: "Harper Lee", year: "1960", read: false },
+        ]);
+        setIsLoading(false);
+        return;
+      }
+
+      try {
+        setIsLoading(true);
+        const { data, error } = await supabase
+          .from('books')
+          .select('*')
+          .eq('user_id', user.id)
+          .order('created_at', { ascending: false });
+
+        if (error) {
+          console.error('Error loading books:', error);
+          // Fall back to demo data
+          setBooks([
+            { id: "book1", title: "White Nights", author: "Fyodor Dostoevsky", year: "1848", read: false },
+            { id: "book2", title: "Harry Potter", author: "J.K. Rowling", year: "1997", read: false },
+            { id: "book3", title: "To Kill a Mockingbird", author: "Harper Lee", year: "1960", read: false },
+          ]);
+          return;
+        }
+
+        if (data && data.length > 0) {
+          const formattedBooks = data.map(book => ({
+            id: book.id,
+            title: book.title,
+            author: book.author,
+            year: book.year || '',
+            read: book.read || false,
+          }));
+          setBooks(formattedBooks);
+        } else {
+          // No books found, use demo data
+          setBooks([
+            { id: "book1", title: "White Nights", author: "Fyodor Dostoevsky", year: "1848", read: false },
+            { id: "book2", title: "Harry Potter", author: "J.K. Rowling", year: "1997", read: false },
+            { id: "book3", title: "To Kill a Mockingbird", author: "Harper Lee", year: "1960", read: false },
+          ]);
+        }
+      } catch (err) {
+        console.error('Error fetching books:', err);
+        setBooks([
+          { id: "book1", title: "White Nights", author: "Fyodor Dostoevsky", year: "1848", read: false },
+          { id: "book2", title: "Harry Potter", author: "J.K. Rowling", year: "1997", read: false },
+          { id: "book3", title: "To Kill a Mockingbird", author: "Harper Lee", year: "1960", read: false },
+        ]);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadBooks();
+  }, [user]);
+
+  const addBook = async () => {
+    if (!title || !author || !user) return;
+
+    try {
+      // Add to database if user is logged in
+      if (user) {
+        const { data, error } = await supabase
+          .from('books')
+          .insert([{
+            title,
+            author,
+            year,
+            read: false,
+            user_id: user.id
+          }])
+          .select()
+          .single();
+
+        if (error) throw error;
+
+        const newBook: BookItem = {
+          id: data.id,
+          title: data.title,
+          author: data.author,
+          year: data.year || '',
+          read: data.read || false,
+        };
+        
+        setBooks([newBook, ...books]);
+        
+        toast({
+          title: "Book added!",
+          description: "Your new book has been added to your collection.",
+        });
+      }
+      
       setTitle("");
       setAuthor("");
       setYear("");
+    } catch (error) {
+      console.error('Error adding book:', error);
+      toast({
+        title: "Error",
+        description: "Failed to add book. Please try again.",
+        variant: "destructive",
+      });
     }
   };
 
-  const toggleRead = (id: string) => {
-    setBooks(
-      books.map((book) =>
-        book.id === id ? { ...book, read: !book.read } : book
-      )
-    );
+  const toggleRead = async (id: string) => {
+    if (!user) return;
+
+    const book = books.find(b => b.id === id);
+    if (!book) return;
+
+    try {
+      // Update in database
+      const { error } = await supabase
+        .from('books')
+        .update({ read: !book.read })
+        .eq('id', id);
+
+      if (error) throw error;
+
+      // Update state after successful database update
+      setBooks(
+        books.map((b) =>
+          b.id === id ? { ...b, read: !b.read } : b
+        )
+      );
+    } catch (error) {
+      console.error('Error toggling book read status:', error);
+      toast({
+        title: "Error",
+        description: "Failed to update book. Please try again.",
+        variant: "destructive",
+      });
+    }
   };
 
-  const removeBook = (id: string) => {
-    setBooks(books.filter((book) => book.id !== id));
+  const removeBook = async (id: string) => {
+    if (!user) return;
+
+    try {
+      // Delete from database
+      const { error } = await supabase
+        .from('books')
+        .delete()
+        .eq('id', id);
+
+      if (error) throw error;
+
+      // Update state after successful database deletion
+      setBooks(books.filter((b) => b.id !== id));
+      
+      toast({
+        title: "Book removed!",
+        description: "The book has been removed from your collection.",
+      });
+    } catch (error) {
+      console.error('Error removing book:', error);
+      toast({
+        title: "Error",
+        description: "Failed to remove book. Please try again.",
+        variant: "destructive",
+      });
+    }
   };
 
   const filteredBooks = books.filter(
@@ -126,7 +271,11 @@ const Books = () => {
               </div>
 
               <div className="w-full max-w-3xl">
-                {filteredBooks.length === 0 ? (
+                {isLoading ? (
+                  <div className="flex justify-center py-10">
+                    <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-cutelist-primary"></div>
+                  </div>
+                ) : filteredBooks.length === 0 ? (
                   <div className="text-center py-10">
                     <div className="flex justify-center mb-4">
                       <Book className="h-12 w-12 text-cutelist-primary opacity-50" />

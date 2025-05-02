@@ -1,3 +1,4 @@
+
 import { Header } from "@/components/Header";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import { Badge } from "@/components/ui/badge";
@@ -43,10 +44,10 @@ const Achievements = () => {
                 <h1 className="text-4xl font-bold text-gradient mb-2">Achievements</h1>
                 <p className="text-gray-400">Track your progress and celebrate your wins!</p>
               </div>
-              {booksCompleted > 0 && (
+              {currentStreak > 0 && (
                 <Badge variant="outline" className="px-3 py-2 bg-gradient-to-r from-cutelist-primary/20 to-cutelist-accent/20 border-cutelist-primary/30 text-white mt-4 md:mt-0">
                   <Trophy className="h-4 w-4 mr-1 text-yellow-400" />
-                  <span className="text-sm">Books read: {booksCompleted}</span>
+                  <span className="text-sm">Current streak: {currentStreak} days</span>
                 </Badge>
               )}
             </div>
@@ -64,6 +65,7 @@ const Achievements = () => {
                       booksCompleted={booksCompleted}
                       pomodoroCompleted={pomodoroCompleted}
                       mostProductiveDay={mostProductiveDay}
+                      currentStreak={currentStreak}
                     />
                   </div>
                   
@@ -118,6 +120,7 @@ const Achievements = () => {
                       booksCompleted={booksCompleted}
                       pomodoroCompleted={pomodoroCompleted}
                       mostProductiveDay={mostProductiveDay}
+                      currentStreak={currentStreak}
                     />
                   </div>
                   

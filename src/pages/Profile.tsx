@@ -320,13 +320,13 @@ const Profile = () => {
                     
                     <div className="bg-cutelist-dark/50 p-4 rounded-lg flex items-start">
                       <div className="bg-cutelist-primary/20 p-2 rounded-full mr-3">
-                        <Flame className="h-5 w-5 text-cutelist-primary" />
+                        <MessageCircle className="h-5 w-5 text-cutelist-primary" />
                       </div>
                       <div>
-                        <h3 className="font-medium text-cutelist-primary">Current Streak</h3>
-                        <p className="text-3xl font-bold mt-1">{statsLoading ? "..." : "3"}</p>
+                        <h3 className="font-medium text-cutelist-primary">Quotes Shared</h3>
+                        <p className="text-3xl font-bold mt-1">{statsLoading ? "..." : userStats.quotes}</p>
                         <p className="text-sm text-gray-300 mt-1">
-                          Days you've been active in a row
+                          Inspirational quotes you've shared
                         </p>
                       </div>
                     </div>

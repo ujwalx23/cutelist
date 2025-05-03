@@ -154,13 +154,13 @@ const Contact = () => {
                   <CardContent className="space-y-4">
                     <div className="flex items-center">
                       <div className="p-2 bg-cutelist-primary/10 rounded-full mr-3">
-                        <Mail className="h-5 w-5 text-cutelist-primary" />
+                        <Mail className="h-5 w-5 text-green-500" />
                       </div>
                       <div>
                         <p className="text-sm font-medium">Email Us</p>
                         <a
                           href="mailto:mebeingbetter23@gmail.com"
-                          className="text-sm text-cutelist-accent hover:underline"
+                          className="text-sm text-green-500 hover:underline"
                         >
                           mebeingbetter23@gmail.com
                         </a>
@@ -173,7 +173,7 @@ const Contact = () => {
                       <div>
                         <p className="text-sm font-medium">Call Us</p>
                         <span className="text-sm text-cutelist-accent">
-                          Unavailable (sorry for now)
+                          Unavailable (Sorry 🥹)
                         </span>
                       </div>
                     </div>

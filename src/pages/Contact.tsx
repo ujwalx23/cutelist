@@ -159,10 +159,11 @@ const Contact = () => {
                       <div>
                         <p className="text-sm font-medium">Email Us</p>
                         <a
-                          href="mailto:support@cutelist.app"
+                          href="mailto:mebeingbetter23@gmail.com">Email me</a>
+"
                           className="text-sm text-cutelist-accent hover:underline"
                         >
-                          support@cutelist.app
+                          mebeingbetter23@gmail.com
                         </a>
                       </div>
                     </div>
@@ -173,10 +174,10 @@ const Contact = () => {
                       <div>
                         <p className="text-sm font-medium">Call Us</p>
                         <a
-                          href="tel:+1234567890"
+                          href="unavailable"
                           className="text-sm text-cutelist-accent hover:underline"
                         >
-                          +1 (234) 567-890
+                          unavailable (sorry)
                         </a>
                       </div>
                     </div>
@@ -196,7 +197,7 @@ const Contact = () => {
                   <CardContent>
                     <div className="flex justify-around">
                       <a 
-                        href="https://linkedin.com" 
+                        href="https://www.linkedin.com/in/ujwal-singh-6b3847297" 
                         target="_blank" 
                         rel="noopener noreferrer"
                         className="p-3 bg-cutelist-primary/10 rounded-full hover:bg-cutelist-primary/20 transition-colors"
@@ -232,7 +233,7 @@ const Contact = () => {
                     <div>
                       <h3 className="font-medium">Is my data secure?</h3>
                       <p className="text-sm text-gray-400">
-                        Yes, we use industry-standard encryption and security measures to protect your data.
+                        Yes, your data is safe and handled with care. It is always protected.
                       </p>
                     </div>
                   </CardContent>

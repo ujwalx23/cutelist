@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { generateId } from "@/lib/utils";
-import { CalendarDays, Plus, X, MessageCircle } from "lucide-react";
+import { CalendarDays, Plus, X } from "lucide-react";
 import { format } from "date-fns";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
@@ -31,7 +31,8 @@ const CalendarPage = () => {
   // Load events from localStorage on component mount
   useEffect(() => {
     if (user) {
-      const storedEvents = localStorage.getItem(`calendar-events-${user.id}`);
+      const storageKey = `calendar-events-${user.id}`;
+      const storedEvents = localStorage.getItem(storageKey);
       if (storedEvents) {
         try {
           const parsedEvents = JSON.parse(storedEvents);
@@ -50,8 +51,9 @@ const CalendarPage = () => {
   
   // Save events to localStorage whenever they change
   useEffect(() => {
-    if (user && events.length > 0) {
-      localStorage.setItem(`calendar-events-${user.id}`, JSON.stringify(events));
+    if (user) {
+      const storageKey = `calendar-events-${user.id}`;
+      localStorage.setItem(storageKey, JSON.stringify(events));
     }
   }, [events, user]);
 
@@ -75,9 +77,6 @@ const CalendarPage = () => {
     const updatedEvents = [...events, newEvent];
     setEvents(updatedEvents);
     
-    // Save to localStorage
-    localStorage.setItem(`calendar-events-${user.id}`, JSON.stringify(updatedEvents));
-    
     setNewEventTitle("");
     setNewEventDescription("");
     
@@ -93,17 +92,10 @@ const CalendarPage = () => {
     const updatedEvents = events.filter(event => event.id !== id);
     setEvents(updatedEvents);
     
-    // Save to localStorage
-    localStorage.setItem(`calendar-events-${user.id}`, JSON.stringify(updatedEvents));
-    
     toast({
       title: "Event removed",
       description: "The event has been removed from your calendar.",
     });
-  };
-
-  const openChatbot = () => {
-    window.open("https://cdn.botpress.cloud/webchat/v2.4/shareable.html?configUrl=https://files.bpcontent.cloud/2025/04/30/11/20250430112856-NCNEDXT4.json", "_blank");
   };
 
   // Filter events for the selected date
@@ -316,17 +308,6 @@ const CalendarPage = () => {
             </div>
           </div>
         </main>
-        
-        {/* Chatbot button */}
-        <div className="fixed bottom-6 right-6 z-50">
-          <Button 
-            onClick={openChatbot}
-            className="rounded-full bg-cutelist-primary hover:bg-cutelist-secondary w-12 h-12 flex items-center justify-center shadow-lg"
-            aria-label="Chat with us"
-          >
-            <MessageCircle className="h-6 w-6" />
-          </Button>
-        </div>
       </div>
     </ThemeProvider>
   );

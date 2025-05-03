@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Header } from "@/components/Header";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import { Button } from "@/components/ui/button";
@@ -9,6 +9,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Plus, Search, Trash, Edit, Save, FileText } from "lucide-react";
 import { generateId } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
+import { useToast } from "@/hooks/use-toast";
 
 interface Note {
   id: string;
@@ -18,20 +19,7 @@ interface Note {
 }
 
 const Notes = () => {
-  const [notes, setNotes] = useState<Note[]>([
-    { 
-      id: "note1", 
-      title: "Welcome Note", 
-      content: "Welcome to CuteList Notes! This is a simple note-taking app to help you organize your thoughts and ideas.", 
-      date: new Date()
-    },
-    { 
-      id: "note2", 
-      title: "Shopping List", 
-      content: "- Milk\n- Eggs\n- Bread\n- Apples\n- Chocolate", 
-      date: new Date(new Date().setDate(new Date().getDate() - 1))
-    },
-  ]);
+  const [notes, setNotes] = useState<Note[]>([]);
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
@@ -39,6 +27,61 @@ const Notes = () => {
   const [editTitle, setEditTitle] = useState("");
   const [editContent, setEditContent] = useState("");
   const { user } = useAuth();
+  const { toast } = useToast();
+
+  // Load notes from localStorage on component mount
+  useEffect(() => {
+    if (user) {
+      const storageKey = `notes-${user.id}`;
+      const storedNotes = localStorage.getItem(storageKey);
+      
+      if (storedNotes) {
+        try {
+          const parsedNotes = JSON.parse(storedNotes);
+          // Convert string dates back to Date objects
+          const notesWithDateObjects = parsedNotes.map((note: any) => ({
+            ...note,
+            date: new Date(note.date)
+          }));
+          setNotes(notesWithDateObjects);
+        } catch (error) {
+          console.error("Error parsing stored notes:", error);
+          // If there's an error parsing, initialize with default notes
+          setDefaultNotes();
+        }
+      } else {
+        // If no notes are found, initialize with default notes
+        setDefaultNotes();
+      }
+    }
+  }, [user]);
+
+  // Set default notes if needed
+  const setDefaultNotes = () => {
+    const defaultNotes = [
+      { 
+        id: "note1", 
+        title: "Welcome Note", 
+        content: "Welcome to CuteList Notes! This is a simple note-taking app to help you organize your thoughts and ideas.", 
+        date: new Date()
+      },
+      { 
+        id: "note2", 
+        title: "Shopping List", 
+        content: "- Milk\n- Eggs\n- Bread\n- Apples\n- Chocolate", 
+        date: new Date(new Date().setDate(new Date().getDate() - 1))
+      },
+    ];
+    setNotes(defaultNotes);
+  };
+  
+  // Save notes to localStorage whenever they change
+  useEffect(() => {
+    if (user && notes.length > 0) {
+      const storageKey = `notes-${user.id}`;
+      localStorage.setItem(storageKey, JSON.stringify(notes));
+    }
+  }, [notes, user]);
 
   const addNote = () => {
     if (title.trim()) {
@@ -51,6 +94,11 @@ const Notes = () => {
       setNotes([newNote, ...notes]);
       setTitle("");
       setContent("");
+      
+      toast({
+        title: "Note added",
+        description: `"${title}" has been added to your notes.`,
+      });
     }
   };
 
@@ -69,10 +117,20 @@ const Notes = () => {
       )
     );
     setEditMode(null);
+    
+    toast({
+      title: "Note updated",
+      description: "Your note has been updated successfully.",
+    });
   };
 
   const removeNote = (id: string) => {
     setNotes(notes.filter((note) => note.id !== id));
+    
+    toast({
+      title: "Note deleted",
+      description: "Your note has been deleted.",
+    });
   };
 
   const filteredNotes = notes.filter(

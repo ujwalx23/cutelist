@@ -15,7 +15,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { 
   Mail, Phone, Send, MessageSquare, HelpCircle, AlertCircle,
-  Linkedin, MessageCircle
+  Linkedin, Twitter, Instagram
 } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 
@@ -159,8 +159,7 @@ const Contact = () => {
                       <div>
                         <p className="text-sm font-medium">Email Us</p>
                         <a
-                          href="mailto:mebeingbetter23@gmail.com">Email me</a>
-"
+                          href="mailto:mebeingbetter23@gmail.com"
                           className="text-sm text-cutelist-accent hover:underline"
                         >
                           mebeingbetter23@gmail.com
@@ -173,12 +172,9 @@ const Contact = () => {
                       </div>
                       <div>
                         <p className="text-sm font-medium">Call Us</p>
-                        <a
-                          href="unavailable"
-                          className="text-sm text-cutelist-accent hover:underline"
-                        >
-                          unavailable (sorry)
-                        </a>
+                        <span className="text-sm text-cutelist-accent">
+                          Unavailable (sorry for now)
+                        </span>
                       </div>
                     </div>
                   </CardContent>
@@ -201,16 +197,27 @@ const Contact = () => {
                         target="_blank" 
                         rel="noopener noreferrer"
                         className="p-3 bg-cutelist-primary/10 rounded-full hover:bg-cutelist-primary/20 transition-colors"
+                        aria-label="LinkedIn"
                       >
                         <Linkedin className="h-6 w-6 text-cutelist-primary" />
                       </a>
                       <a 
-                        href="https://discord.com" 
+                        href="https://x.com/UJWALSINGH23/" 
                         target="_blank" 
                         rel="noopener noreferrer" 
                         className="p-3 bg-cutelist-primary/10 rounded-full hover:bg-cutelist-primary/20 transition-colors"
+                        aria-label="Twitter"
                       >
-                        <MessageCircle className="h-6 w-6 text-cutelist-primary" />
+                        <Twitter className="h-6 w-6 text-cutelist-primary" />
+                      </a>
+                      <a 
+                        href="https://www.instagram.com/umorningstar23?igsh=YzQ0b2tsamh3bTFu" 
+                        target="_blank" 
+                        rel="noopener noreferrer" 
+                        className="p-3 bg-cutelist-primary/10 rounded-full hover:bg-cutelist-primary/20 transition-colors"
+                        aria-label="Instagram"
+                      >
+                        <Instagram className="h-6 w-6 text-cutelist-primary" />
                       </a>
                     </div>
                   </CardContent>

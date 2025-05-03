@@ -57,7 +57,7 @@ const Contact = () => {
             <div className="text-center mb-8">
               <h1 className="text-4xl font-bold text-gradient mb-2">Contact Us</h1>
               <p className="text-gray-400 max-w-xl mx-auto">
-                Have questions or feedback? We'd love to hear from you. Get in touch with our team!
+                Have questions or feedback? We'd love to hear from you. Get in touch with us!
               </p>
             </div>
 
@@ -148,7 +148,7 @@ const Contact = () => {
                       Get in Touch
                     </CardTitle>
                     <CardDescription>
-                      Our team is here to help with any questions or concerns.
+                      We are here to help with any questions or concerns.
                     </CardDescription>
                   </CardHeader>
                   <CardContent className="space-y-4">

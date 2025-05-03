@@ -37,20 +37,20 @@ export const useAchievements = () => {
           
         if (todosError) throw todosError;
         
-        // Fetch completed books
+        // Fetch completed books - note we use 'read' column not 'updated_at'
         const { data: books, error: booksError } = await supabase
           .from('books')
-          .select('id, title, created_at, updated_at')
+          .select('id, title, author, created_at')
           .eq('user_id', user.id)
           .eq('read', true);
         
         if (booksError) throw booksError;
         
-        // Format completed books
+        // Format completed books - using created_at since there is no updated_at
         const completedBooks = books ? books.map(book => ({
           id: book.id,
           content: book.title,
-          completed_at: book.updated_at || book.created_at,
+          completed_at: book.created_at,  // Use created_at as completion date
           type: 'book' as TaskType
         })) : [];
         

@@ -5,8 +5,11 @@ import { Badge } from "@/components/ui/badge";
 import { Trophy, MessageCircle } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Button } from "@/components/ui/button"; 
+import { useEffect } from "react";
+import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/contexts/AuthContext";
 
-// Import our new components
+// Import our components
 import ActivityCalendar from "@/components/achievements/ActivityCalendar";
 import StatisticsCard from "@/components/achievements/StatisticsCard";
 import DailyAchievements from "@/components/achievements/DailyAchievements";
@@ -15,6 +18,9 @@ import { useAchievements } from "@/components/achievements/useAchievements";
 
 const Achievements = () => {
   const isMobile = useIsMobile();
+  const { toast } = useToast();
+  const { user } = useAuth();
+  
   const {
     selectedDate,
     setSelectedDate,
@@ -28,6 +34,17 @@ const Achievements = () => {
     currentStreak,
     mostProductiveDay
   } = useAchievements();
+
+  // Show a toast if the user is not logged in
+  useEffect(() => {
+    if (!user) {
+      toast({
+        title: "Login required",
+        description: "Please sign in to view your achievements.",
+        variant: "default",
+      });
+    }
+  }, [user, toast]);
 
   const openChatbot = () => {
     window.open("https://cdn.botpress.cloud/webchat/v2.4/shareable.html?configUrl=https://files.bpcontent.cloud/2025/04/30/11/20250430112856-NCNEDXT4.json", "_blank");

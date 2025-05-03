@@ -1,4 +1,5 @@
-import { useState } from "react";
+
+import { useState, useEffect } from "react";
 import { Header } from "@/components/Header";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import { Calendar } from "@/components/ui/calendar";
@@ -26,9 +27,43 @@ const CalendarPage = () => {
   const [newEventDescription, setNewEventDescription] = useState("");
   const { user } = useAuth();
   const { toast } = useToast();
+  
+  // Load events from localStorage on component mount
+  useEffect(() => {
+    if (user) {
+      const storedEvents = localStorage.getItem(`calendar-events-${user.id}`);
+      if (storedEvents) {
+        try {
+          const parsedEvents = JSON.parse(storedEvents);
+          // Convert string dates back to Date objects
+          const eventsWithDateObjects = parsedEvents.map((event: any) => ({
+            ...event,
+            date: new Date(event.date)
+          }));
+          setEvents(eventsWithDateObjects);
+        } catch (error) {
+          console.error("Error parsing stored events:", error);
+        }
+      }
+    }
+  }, [user]);
+  
+  // Save events to localStorage whenever they change
+  useEffect(() => {
+    if (user && events.length > 0) {
+      localStorage.setItem(`calendar-events-${user.id}`, JSON.stringify(events));
+    }
+  }, [events, user]);
 
   const addEvent = () => {
-    if (!date || !newEventTitle) return;
+    if (!date || !newEventTitle || !user) {
+      toast({
+        title: "Cannot add event",
+        description: date ? "Please enter an event title" : "Please select a date",
+        variant: "destructive",
+      });
+      return;
+    }
     
     const newEvent: Event = {
       id: generateId(),
@@ -37,7 +72,12 @@ const CalendarPage = () => {
       date: date,
     };
     
-    setEvents([...events, newEvent]);
+    const updatedEvents = [...events, newEvent];
+    setEvents(updatedEvents);
+    
+    // Save to localStorage
+    localStorage.setItem(`calendar-events-${user.id}`, JSON.stringify(updatedEvents));
+    
     setNewEventTitle("");
     setNewEventDescription("");
     
@@ -48,7 +88,14 @@ const CalendarPage = () => {
   };
 
   const removeEvent = (id: string) => {
-    setEvents(events.filter(event => event.id !== id));
+    if (!user) return;
+    
+    const updatedEvents = events.filter(event => event.id !== id);
+    setEvents(updatedEvents);
+    
+    // Save to localStorage
+    localStorage.setItem(`calendar-events-${user.id}`, JSON.stringify(updatedEvents));
+    
     toast({
       title: "Event removed",
       description: "The event has been removed from your calendar.",
@@ -69,12 +116,12 @@ const CalendarPage = () => {
   today.setHours(0, 0, 0, 0);
   
   const todayEvents = events.filter(
-    (event) => event.date.toDateString() === today.toDateString()
+    (event) => new Date(event.date).toDateString() === today.toDateString()
   );
   
   const upcomingEvents = events.filter(
-    (event) => event.date > today
-  ).sort((a, b) => a.date.getTime() - b.date.getTime());
+    (event) => new Date(event.date) > today
+  ).sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
 
   return (
     <ThemeProvider>
@@ -155,7 +202,7 @@ const CalendarPage = () => {
                               <CardHeader className="pb-2 flex flex-row justify-between items-start">
                                 <div>
                                   <CardTitle>{event.title}</CardTitle>
-                                  <CardDescription>{format(event.date, "p")}</CardDescription>
+                                  <CardDescription>{format(new Date(event.date), "p")}</CardDescription>
                                 </div>
                                 <Button 
                                   variant="ghost" 
@@ -197,7 +244,7 @@ const CalendarPage = () => {
                               <CardHeader className="pb-2 flex flex-row justify-between items-start">
                                 <div>
                                   <CardTitle>{event.title}</CardTitle>
-                                  <CardDescription>{format(event.date, "p")}</CardDescription>
+                                  <CardDescription>{format(new Date(event.date), "p")}</CardDescription>
                                 </div>
                                 <Button 
                                   variant="ghost" 
@@ -235,7 +282,7 @@ const CalendarPage = () => {
                               <CardHeader className="pb-2 flex flex-row justify-between items-start">
                                 <div>
                                   <CardTitle>{event.title}</CardTitle>
-                                  <CardDescription>{format(event.date, "PPP")}</CardDescription>
+                                  <CardDescription>{format(new Date(event.date), "PPP")}</CardDescription>
                                 </div>
                                 <Button 
                                   variant="ghost" 

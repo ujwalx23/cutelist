@@ -200,7 +200,7 @@ const Books = () => {
                 My Books
               </h1>
               <p className="text-center text-gray-400 mb-6">
-                Keep track of your reading lists 
+                Keep track of your reading list
               </p>
 
               {user ? (

@@ -67,9 +67,9 @@ const Notes = () => {
       },
       { 
         id: "note2", 
-        title: "Shopping List", 
-        content: "- Milk\n- Eggs\n- Bread\n- Apples\n- Chocolate", 
-        date: new Date(new Date().setDate(new Date().getDate() - 1))
+        title: "Shopping Lis", 
+        content: "- Milk\n- Rice\n- Chips\n- Apples\n- Chocolate", 
+        date: new Date(new Date().setDate(new Date().getDate() + 1))
       },
     ];
     setNotes(defaultNotes);

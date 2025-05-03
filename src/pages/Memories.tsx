@@ -1,4 +1,3 @@
-
 import { useState, useRef, useEffect } from "react";
 import { Header } from "@/components/Header";
 import { ThemeProvider } from "@/components/ThemeProvider";
@@ -58,7 +57,7 @@ interface Quote {
 }
 
 const Memories = () => {
-  const { user } = useAuth();
+  const { user, loading } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
@@ -85,9 +84,10 @@ const Memories = () => {
   });
   const [favorites, setFavorites] = useState<string[]>([]);
 
-  // Check authentication
+  // Check authentication - modified to wait for loading to complete
   useEffect(() => {
-    if (!user) {
+    // Only redirect if not loading and user is null
+    if (!loading && !user) {
       toast({
         title: "Authentication Required",
         description: "Please sign in to access memories and quotes.",
@@ -95,9 +95,9 @@ const Memories = () => {
       });
       navigate("/");
     }
-  }, [user, navigate, toast]);
+  }, [user, navigate, toast, loading]);
 
-  // Fetch memories
+  // Fetch memories - modified to depend on loading state too
   const { data: memories = [], isLoading: isLoadingMemories, refetch: refetchMemories } = useQuery({
     queryKey: ['memories', user?.id],
     queryFn: async () => {
@@ -118,10 +118,10 @@ const Memories = () => {
         return [];
       }
     },
-    enabled: !!user && viewType === "memories"
+    enabled: !!user && !loading && viewType === "memories"
   });
 
-  // Fetch quotes
+  // Fetch quotes - modified to depend on loading state too
   const { data: quotes = [], isLoading: isLoadingQuotes, refetch: refetchQuotes } = useQuery({
     queryKey: ['quotes', user?.id],
     queryFn: async () => {
@@ -131,6 +131,7 @@ const Memories = () => {
         const { data: quotesData, error } = await supabase
           .from('quotes')
           .select('*')
+          .eq('user_id', user.id)
           .order('created_at', { ascending: false });
         
         if (error) throw error;
@@ -140,9 +141,10 @@ const Memories = () => {
         return [];
       }
     },
-    enabled: !!user && viewType === "quotes"
+    enabled: !!user && !loading && viewType === "quotes"
   });
 
+  
   // Create memory mutation
   const createMemoryMutation = useMutation({
     mutationFn: async (memoryData: typeof newMemory) => {
@@ -331,6 +333,8 @@ const Memories = () => {
     },
   });
 
+  
+
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!e.target.files || e.target.files.length === 0) return;
     
@@ -405,6 +409,8 @@ const Memories = () => {
       setFavorites([...favorites, id]);
     }
   };
+
+  
 
   const renderMemoryCard = (memory: Memory) => {
     const isFavorite = favorites.includes(memory.id);
@@ -494,6 +500,8 @@ const Memories = () => {
     );
   };
 
+  
+
   const renderMemoriesTab = () => {
     return (
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -582,8 +590,25 @@ const Memories = () => {
     );
   };
 
-  // If not authenticated, show a sign-in prompt
-  if (!user) {
+  // Show loading state while checking authentication
+  if (loading) {
+    return (
+      <ThemeProvider>
+        <div className="min-h-screen flex flex-col bg-cutelist-dark">
+          <Header />
+          <main className="flex-1 container py-12 flex items-center justify-center">
+            <div className="flex flex-col items-center">
+              <div className="h-8 w-8 rounded-full border-2 border-cutelist-primary border-t-transparent animate-spin mb-4"></div>
+              <p className="text-gray-400">Loading...</p>
+            </div>
+          </main>
+        </div>
+      </ThemeProvider>
+    );
+  }
+
+  // If not authenticated and finished loading, show sign-in prompt
+  if (!user && !loading) {
     return (
       <ThemeProvider>
         <div className="min-h-screen flex flex-col bg-cutelist-dark">
@@ -606,6 +631,7 @@ const Memories = () => {
     );
   }
 
+  // Main UI when authenticated
   return (
     <ThemeProvider>
       <div className="min-h-screen flex flex-col bg-cutelist-dark">
@@ -660,6 +686,7 @@ const Memories = () => {
             </Tabs>
           </div>
         </main>
+        
         
         {/* Add Memory Modal - Improved Upload UI */}
         <Dialog open={isAddModalOpen} onOpenChange={setIsAddModalOpen}>
@@ -906,23 +933,3 @@ const Memories = () => {
                   id="author"
                   placeholder="Who said or wrote this quote?"
                   value={newQuote.author}
-                  onChange={(e) => setNewQuote({ ...newQuote, author: e.target.value })}
-                />
-              </div>
-            </div>
-            <div className="flex justify-end space-x-2 mt-4">
-              <Button variant="outline" onClick={() => setIsAddQuoteModalOpen(false)}>
-                Cancel
-              </Button>
-              <Button onClick={handleCreateQuote} disabled={createQuoteMutation.isPending}>
-                {createQuoteMutation.isPending ? "Adding..." : "Add Quote"}
-              </Button>
-            </div>
-          </DialogContent>
-        </Dialog>
-      </div>
-    </ThemeProvider>
-  );
-};
-
-export default Memories;

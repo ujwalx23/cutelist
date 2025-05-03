@@ -39,6 +39,33 @@ export type Database = {
         }
         Relationships: []
       }
+      calendar_events: {
+        Row: {
+          created_at: string | null
+          date: string
+          description: string | null
+          id: string
+          title: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          date: string
+          description?: string | null
+          id?: string
+          title: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          date?: string
+          description?: string | null
+          id?: string
+          title?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       contact_submissions: {
         Row: {
           created_at: string
@@ -88,6 +115,33 @@ export type Database = {
           id?: string
           image_url?: string | null
           tags?: string[] | null
+          title?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      notes: {
+        Row: {
+          content: string | null
+          created_at: string | null
+          date: string | null
+          id: string
+          title: string
+          user_id: string
+        }
+        Insert: {
+          content?: string | null
+          created_at?: string | null
+          date?: string | null
+          id?: string
+          title: string
+          user_id: string
+        }
+        Update: {
+          content?: string | null
+          created_at?: string | null
+          date?: string | null
+          id?: string
           title?: string
           user_id?: string
         }

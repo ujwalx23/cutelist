@@ -75,7 +75,7 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
           <div className="space-y-2">
             <Input
               type="password"
-              placeholder="Password"
+              placeholder="Password (Please remember)"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required

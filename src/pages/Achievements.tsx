@@ -30,7 +30,6 @@ const Achievements = () => {
     totalCompleted,
     todosCompleted,
     booksCompleted,
-    pomodoroCompleted,
     currentStreak,
     mostProductiveDay
   } = useAchievements();

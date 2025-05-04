@@ -932,4 +932,4 @@ const Memories = () => {
                 <Input
                   id="author"
                   placeholder="Who said or wrote this quote?"
-                  value={newQuote.author}
+                  value={newQuote

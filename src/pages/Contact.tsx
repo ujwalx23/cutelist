@@ -46,17 +46,25 @@ const Contact = () => {
     setIsSubmitting(true);
     
     try {
+      // Validate form data
+      if (!form.name.trim() || !form.email.trim() || !form.message.trim()) {
+        throw new Error("Please fill in all required fields");
+      }
+      
       // Insert the form data into Supabase
       const { error } = await supabase
         .from('contact_submissions')
         .insert({
           name: form.name,
           email: form.email,
-          message: `${form.subject}: ${form.message}`,
+          message: form.subject ? `${form.subject}: ${form.message}` : form.message,
           user_id: user?.id || null
         });
       
-      if (error) throw error;
+      if (error) {
+        console.error("Supabase error:", error);
+        throw error;
+      }
       
       toast({
         title: "Message sent!",
@@ -70,11 +78,11 @@ const Contact = () => {
         subject: "",
         message: "",
       });
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error submitting form:", error);
       toast({
         title: "Submission failed",
-        description: "There was a problem sending your message. Please try again.",
+        description: error.message || "There was a problem sending your message. Please try again.",
         variant: "destructive",
       });
     } finally {

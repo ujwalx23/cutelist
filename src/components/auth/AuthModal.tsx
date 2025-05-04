@@ -96,8 +96,7 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
           >
             {isSignUp
               ? "Already have an account? Sign in"
-              : "Don't have an account? Sign up 
-            Please remember password" }
+              : "Don't have an account? Sign up and please remember your password" }
           </Button>
         </div>
       </DialogContent>

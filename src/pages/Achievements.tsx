@@ -40,7 +40,7 @@ const Achievements = () => {
       toast({
         title: "Login required",
         description: "Please sign in to view your achievements.",
-        variant: "default",
+        variant: "destructive",
       });
     }
   }, [user, toast]);

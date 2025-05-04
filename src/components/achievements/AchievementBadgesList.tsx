@@ -25,7 +25,7 @@ const AchievementBadgesList = ({
     { id: 3, name: "Completed 100 Tasks", description: "Completed 100 tasks", unlocked: todosCompleted >= 100, icon: <CheckCircle2 className="h-5 w-5" /> },
     { id: 4, name: "7-Day Streak", description: "Completed tasks for 7 consecutive days", unlocked: currentStreak >= 7, icon: <CalendarCheck2 className="h-5 w-5" /> },
     { id: 5, name: "30-Day Streak", description: "Completed tasks for 30 consecutive days", unlocked: currentStreak >= 30, icon: <Star className="h-5 w-5" /> },
-    { id: 6, name: "20 Pomodoro Sessions", description: "Completed 20 pomodoro work sessions", unlocked: pomodoroCompleted >= 20, icon: <Clock className="h-5 w-5" /> },
+    { id: 6, name: "100-Day Streak", description: "Completed tasks for 7 consecutive days", unlocked: currentstreak >= 100, icon: <Clock className="h-5 w-5" /> },
   ];
   
   if (isLoading) {

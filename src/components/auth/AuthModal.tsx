@@ -33,7 +33,7 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
         await signUp(email, password);
         toast({
           title: "Account created!",
-          description: "Please check your email to verify your account.",
+          description: "Please check your email to verify your account",
         });
       } else {
         await signIn(email, password);
@@ -45,8 +45,8 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
       onClose();
     } catch (error) {
       toast({
-        title: "Error",
-        description: "Account not created or incorrect password. Please check your details and try again.",
+        title: "Oops!",
+        description: "Account doesn't exist or password is incorrect. Please try again, or sign up if you don’t have an account.",
         variant: "destructive",
       });
     } finally {

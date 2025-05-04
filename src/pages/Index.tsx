@@ -29,7 +29,7 @@ const Index = () => {
                 <div className="text-center mb-8">
                   <p className="mb-4 text-gray-300">Sign in to create and manage your tasks</p>
                   <p className="mb-4 text-gray-300">
-    New to the app? Sign up to start creating and managing your tasks! </p>
+    New to the app? Sign up! </p>
                   <Button onClick={() => setShowAuthModal(true)} className="px-6">
                     Sign in
                   </Button>

@@ -39,14 +39,14 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
         await signIn(email, password);
         toast({
           title: "Welcome back!",
-          description: "You've successfully signed in.",
+          description: "You've successfully signed in 💜",
         });
       }
       onClose();
     } catch (error) {
       toast({
         title: "Error",
-        description: "An error occurred. Please try again.",
+        description: "Account not created or incorrect password. Please check your details and try again.",
         variant: "destructive",
       });
     } finally {

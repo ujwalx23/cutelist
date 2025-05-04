@@ -361,7 +361,7 @@ const Pomodoro = () => {
                   <li>Work for 25 minutes (one "Pomodoro")</li>
                   <li>Take a 5-minute break</li>
                   <li>After 4 Pomodoros, take a longer 15-minute break</li>
-                  <li>Small wins matter</li>
+                  <li>This is how we get things done without losing our minds</li>
                 </ul>
               </div>
             </div>

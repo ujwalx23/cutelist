@@ -19,10 +19,11 @@ const AchievementBadgesList = ({
   
   const achievements = [
     { id: 1, name: "First Task", description: "Completed your first task", unlocked: todosCompleted >= 1, icon: <CheckCircle2 className="h-5 w-5" /> },
-    { id: 2, name: "Read 3 Books", description: "Completed reading 3 books", unlocked: booksCompleted >= 3, icon: <BookOpen className="h-5 w-5" /> },
-    { id: 3, name: "Completed 100 Tasks", description: "Completed 100 tasks", unlocked: todosCompleted >= 100, icon: <CheckCircle2 className="h-5 w-5" /> },
-    { id: 4, name: "7-Day Streak", description: "Completed tasks for 7 consecutive days", unlocked: currentStreak >= 7, icon: <CalendarCheck2 className="h-5 w-5" /> },
-    { id: 5, name: "30-Day Streak", description: "Completed tasks for 30 consecutive days", unlocked: currentStreak >= 30, icon: <Star className="h-5 w-5" /> },
+    { id: 2, name: "Read 3 Books", description: "Completed reading 5 books", unlocked: booksCompleted >= 5, icon: <BookOpen className="h-5 w-5" /> },
+    { id: 3, name: "Completed 30 Tasks", description: "Completed 30 tasks", unlocked: todosCompleted >= 30, icon: <CheckCircle2 className="h-5 w-5" /> },
+    { id: 4, name: "Completed 100 Tasks", description: "Completed 100 tasks", unlocked: todosCompleted >= 100, icon: <CheckCircle2 className="h-5 w-5" /> },
+    { id: 5, name: "7-Day Streak", description: "Completed tasks for 7 consecutive days", unlocked: currentStreak >= 7, icon: <CalendarCheck2 className="h-5 w-5" /> },
+    { id: 6, name: "30-Day Streak", description: "Completed tasks for 30 consecutive days", unlocked: currentStreak >= 30, icon: <Star className="h-5 w-5" /> },
   ];
   
   if (isLoading) {

@@ -27,9 +27,8 @@ const Index = () => {
               <p className="text-center text-gray-400 mb-8">Manage your tasks in the cutest way possible</p>
               {!user ? (
                 <div className="text-center mb-8">
-                  <p className="mb-4 text-gray-300">Sign in to create and manage your tasks</p>
-                  <p className="mb-4 text-gray-300">
-    New to the app? Sign up! </p>
+                  <p className="mb-4 text-gray-300">Sign in to create and manage your tasks or New to the app? Sign up!</p>
+                 
                   <Button onClick={() => setShowAuthModal(true)} className="px-6">
                     Sign in
                   </Button>

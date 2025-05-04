@@ -80,7 +80,6 @@ const Achievements = () => {
                       totalCompleted={totalCompleted}
                       todosCompleted={todosCompleted}
                       booksCompleted={booksCompleted}
-                      pomodoroCompleted={pomodoroCompleted}
                       mostProductiveDay={mostProductiveDay}
                       currentStreak={currentStreak}
                     />
@@ -113,7 +112,6 @@ const Achievements = () => {
                         isLoading={isLoading}
                         todosCompleted={todosCompleted}
                         booksCompleted={booksCompleted}
-                        pomodoroCompleted={pomodoroCompleted}
                         currentStreak={currentStreak}
                       />
                     </div>
@@ -135,7 +133,6 @@ const Achievements = () => {
                       totalCompleted={totalCompleted}
                       todosCompleted={todosCompleted}
                       booksCompleted={booksCompleted}
-                      pomodoroCompleted={pomodoroCompleted}
                       mostProductiveDay={mostProductiveDay}
                       currentStreak={currentStreak}
                     />
@@ -157,7 +154,6 @@ const Achievements = () => {
                         isLoading={isLoading}
                         todosCompleted={todosCompleted}
                         booksCompleted={booksCompleted}
-                        pomodoroCompleted={pomodoroCompleted}
                         currentStreak={currentStreak}
                       />
                     </div>

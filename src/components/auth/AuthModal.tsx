@@ -75,7 +75,7 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
           <div className="space-y-2">
             <Input
               type="password"
-              placeholder="Password (please remember)"
+              placeholder="Password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
@@ -96,7 +96,7 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
           >
             {isSignUp
               ? "Already have an account? Sign in"
-              : "Don't have an account? Sign up!" }
+              : "Don't have an account? Sign up!💜" }
           </Button>
         </div>
       </DialogContent>

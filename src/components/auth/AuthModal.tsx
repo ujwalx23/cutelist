@@ -46,7 +46,7 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
     } catch (error: any) {
       if (isSignUp) {
         toast({
-          title: "Account already exist",
+          title: "Account may already exist",
           description:
             "Try signing in instead 💜 If you forgot your password, contact us to get a magic link!",
           variant: "destructive",

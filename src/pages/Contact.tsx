@@ -292,6 +292,15 @@ const Contact = () => {
                       <p className="text-sm text-gray-400">
                         Yes, your data is safe and handled with care. It is always protected.
                       </p>
+                       <h3 className="font-medium">Is my data secure</h3>
+                      <p className="text-sm text-gray-400">
+                        Yes, your data is safe and handled with care. It is always protected.
+                      </p>
+                      <h3 className="font-medium">Forgot your password?</h3>
+<p className="text-sm text-gray-400">
+  Just contact us with your login email. You can describe your problem or simply write magic link in the message and send it to us. We'll send you a login link so you can access your CuteList account and get back to organizing your life.💜
+</p>
+
                     </div>
                   </CardContent>
                 </Card>

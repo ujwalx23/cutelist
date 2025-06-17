@@ -32,7 +32,7 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
         await signUp(email, password);
         toast({
           title: "Account created!",
-          description: "Please check your email to verify your account",
+          description: "Please check your email to verify your account. Then sign in using the same credentials",
         });
       } else {
         await signIn(email, password);

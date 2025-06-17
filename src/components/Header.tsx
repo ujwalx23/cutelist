@@ -11,17 +11,17 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { 
-  User, 
-  Home, 
-  Book, 
-  Calendar, 
-  Calculator, 
-  Clock, 
+import {
+  User,
+  Home,
+  Book,
+  Calendar,
+  Calculator,
+  Clock,
   FileText,
   Menu,
   Trophy,
-  Heart
+  Heart,
 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -34,6 +34,7 @@ import { Logo } from "./Logo";
 
 export function Header() {
   const [showAuthModal, setShowAuthModal] = useState(false);
+  const [authMode, setAuthMode] = useState<"login" | "signup">("login");
   const { user, signOut } = useAuth();
   const { toast } = useToast();
   const isMobile = useIsMobile();
@@ -107,72 +108,37 @@ export function Header() {
       </SheetTrigger>
       <SheetContent side="left" className="bg-cutelist-dark/95 backdrop-blur-lg border-r border-white/10">
         <div className="flex flex-col space-y-6 mt-8">
-          <Link to="/" className="flex items-center space-x-2 px-2 py-2 hover:bg-white/5 rounded-md">
-            <Home className="h-5 w-5" />
-            <span>Home</span>
-          </Link>
-          <Link to="/books" className="flex items-center space-x-2 px-2 py-2 hover:bg-white/5 rounded-md">
-            <Book className="h-5 w-5" />
-            <span>Books</span>
-          </Link>
-          <Link to="/calendar" className="flex items-center space-x-2 px-2 py-2 hover:bg-white/5 rounded-md">
-            <Calendar className="h-5 w-5" />
-            <span>Calendar</span>
-          </Link>
-          <Link to="/calculator" className="flex items-center space-x-2 px-2 py-2 hover:bg-white/5 rounded-md">
-            <Calculator className="h-5 w-5" />
-            <span>Calculator</span>
-          </Link>
-          <Link to="/pomodoro" className="flex items-center space-x-2 px-2 py-2 hover:bg-white/5 rounded-md">
-            <Clock className="h-5 w-5" />
-            <span>Pomodoro</span>
-          </Link>
-          <Link to="/notes" className="flex items-center space-x-2 px-2 py-2 hover:bg-white/5 rounded-md">
-            <FileText className="h-5 w-5" />
-            <span>Notes</span>
-          </Link>
-          <Link to="/achievements" className="flex items-center space-x-2 px-2 py-2 hover:bg-white/5 rounded-md">
-            <Trophy className="h-5 w-5" />
-            <span>Achievements</span>
-          </Link>
-          <Link to="/memories" className="flex items-center space-x-2 px-2 py-2 hover:bg-white/5 rounded-md">
-            <Heart className="h-5 w-5" />
-            <span>Memories</span>
-          </Link>
-          <Link to="/contact" className="flex items-center space-x-2 px-2 py-2 hover:bg-white/5 rounded-md">
-            <span>Contact</span>
-          </Link>
-
+          <NavLinks />
           {user ? (
             <>
               <Link to="/profile" className="flex items-center space-x-2 px-2 py-2 hover:bg-white/5 rounded-md">
                 <User className="h-5 w-5" />
                 <span>Profile</span>
               </Link>
-              <Button 
-                variant="ghost" 
-                className="justify-start px-2" 
-                onClick={handleSignOut}
-              >
+              <Button variant="ghost" className="justify-start px-2" onClick={handleSignOut}>
                 Sign Out
               </Button>
             </>
           ) : (
-            <Button 
-              className="mt-4" 
-              onClick={() => setShowAuthModal(true)}
-            >
-              Sign In
-            </Button>
+            <>
+              <Button className="mt-4" onClick={() => {
+                setAuthMode("login");
+                setShowAuthModal(true);
+              }}>
+                Sign In
+              </Button>
+              <Button variant="ghost" onClick={() => {
+                setAuthMode("signup");
+                setShowAuthModal(true);
+              }}>
+                Sign Up
+              </Button>
+            </>
           )}
         </div>
       </SheetContent>
     </Sheet>
   );
-
-  const openChatbot = () => {
-    window.open("https://cdn.botpress.cloud/webchat/v2.4/shareable.html?configUrl=https://files.bpcontent.cloud/2025/04/30/11/20250430112856-NCNEDXT4.json", "_blank");
-  };
 
   return (
     <header className="border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 sticky top-0 z-50">
@@ -182,7 +148,7 @@ export function Header() {
             <Link to="/" className="flex items-center">
               <Logo />
             </Link>
-            
+
             {isMobile ? (
               <div className="flex items-center gap-2">
                 {user ? (
@@ -199,9 +165,7 @@ export function Header() {
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
                       <Link to="/profile">
-                        <DropdownMenuItem>
-                          Profile
-                        </DropdownMenuItem>
+                        <DropdownMenuItem>Profile</DropdownMenuItem>
                       </Link>
                       <DropdownMenuSeparator />
                       <DropdownMenuItem onClick={handleSignOut}>
@@ -210,20 +174,31 @@ export function Header() {
                     </DropdownMenuContent>
                   </DropdownMenu>
                 ) : (
-                  <Button 
-                    size="sm" 
-                    className="ml-2" 
-                    onClick={() => setShowAuthModal(true)}
-                  >
-                    Sign in
-                  </Button>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button>Sign In</Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuItem onClick={() => {
+                        setAuthMode("login");
+                        setShowAuthModal(true);
+                      }}>
+                        Sign in
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => {
+                        setAuthMode("signup");
+                        setShowAuthModal(true);
+                      }}>
+                        Sign up
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
                 )}
                 <MobileNavigation />
               </div>
             ) : (
               <nav className="flex items-center space-x-4">
                 <NavLinks />
-                
                 {user ? (
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
@@ -238,9 +213,7 @@ export function Header() {
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
                       <Link to="/profile">
-                        <DropdownMenuItem>
-                          Profile
-                        </DropdownMenuItem>
+                        <DropdownMenuItem>Profile</DropdownMenuItem>
                       </Link>
                       <DropdownMenuSeparator />
                       <DropdownMenuItem onClick={handleSignOut}>
@@ -249,18 +222,36 @@ export function Header() {
                     </DropdownMenuContent>
                   </DropdownMenu>
                 ) : (
-                  <Button onClick={() => setShowAuthModal(true)}>
-                    Sign in
-                  </Button>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button>Sign In</Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuItem onClick={() => {
+                        setAuthMode("login");
+                        setShowAuthModal(true);
+                      }}>
+                        Sign in
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => {
+                        setAuthMode("signup");
+                        setShowAuthModal(true);
+                      }}>
+                        Sign up
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
                 )}
               </nav>
             )}
           </div>
         </div>
       </div>
+
       <AuthModal
         isOpen={showAuthModal}
         onClose={() => setShowAuthModal(false)}
+        mode={authMode}
       />
     </header>
   );

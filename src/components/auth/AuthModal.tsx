@@ -32,7 +32,8 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
         await signUp(email, password);
         toast({
           title: "Account created!",
-          description: "Please check your email to verify your account. Then sign in using the same credentials",
+          description:
+            "Please check your email to verify 💌 Then sign in with the same email and password.",
         });
       } else {
         await signIn(email, password);
@@ -42,13 +43,22 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
         });
       }
       onClose();
-    } catch (error) {
-      toast({
-        title: "Oops!",
-        description:
-          "Account doesn't exist or password is incorrect. Please try again, or sign up if you don’t have an account.",
-        variant: "destructive",
-      });
+    } catch (error: any) {
+      if (isSignUp) {
+        toast({
+          title: "Account may already exist",
+          description:
+            "Try signing in instead 💜 If you forgot your password, contact us to get a magic link!",
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Login failed",
+          description:
+            "Email or password is incorrect. Please try again or sign up if you don’t have an account.",
+          variant: "destructive",
+        });
+      }
     } finally {
       setLoading(false);
     }
@@ -81,14 +91,14 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
             {loading
               ? "Loading..."
               : isSignUp
-              ? "Create account "
-              : "Sign in✨"}
+              ? "Create account 💜"
+              : "Sign in ✨"}
           </Button>
         </form>
         <div className="text-center mt-4">
           <Button variant="ghost" onClick={() => setIsSignUp(!isSignUp)}>
             {isSignUp
-              ? "Already have an account? Sign in💜"
+              ? "Already have an account? Sign in 💜"
               : "Don't have an account? Sign up!"}
           </Button>
         </div>

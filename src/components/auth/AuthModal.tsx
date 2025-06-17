@@ -55,7 +55,7 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
         toast({
           title: "Login failed",
           description:
-            "Email or password is incorrect. Please try again or sign up if you don’t have an account.",
+            "Incorrect email or password. Make sure your account is verified or sign up if you don’t have one.",
           variant: "destructive",
         });
       }

@@ -34,7 +34,7 @@ import { Logo } from "./Logo";
 
 export function Header() {
   const [showAuthModal, setShowAuthModal] = useState(false);
-  const [authMode, setAuthMode] = useState<"login" | "signup">("login");
+  const [authMode, setAuthMode] = useState<"login" | "signup">("signup");
   const { user, signOut } = useAuth();
   const { toast } = useToast();
   const isMobile = useIsMobile();
@@ -120,20 +120,12 @@ export function Header() {
               </Button>
             </>
           ) : (
-            <>
-              <Button className="mt-4" onClick={() => {
-                setAuthMode("login");
-                setShowAuthModal(true);
-              }}>
-                Sign In
-              </Button>
-              <Button variant="ghost" onClick={() => {
-                setAuthMode("signup");
-                setShowAuthModal(true);
-              }}>
-                Sign Up
-              </Button>
-            </>
+            <Button onClick={() => {
+              setAuthMode("signup");
+              setShowAuthModal(true);
+            }}>
+              Sign up
+            </Button>
           )}
         </div>
       </SheetContent>
@@ -174,27 +166,20 @@ export function Header() {
                     </DropdownMenuContent>
                   </DropdownMenu>
                 ) : (
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button>Sign In</Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                      <DropdownMenuItem onClick={() => {
-                        setAuthMode("login");
-                        setShowAuthModal(true);
-                      }}>
-                        Sign in
-                      </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => {
+                  <>
+                    <Button
+                      size="sm"
+                      className="ml-2"
+                      onClick={() => {
                         setAuthMode("signup");
                         setShowAuthModal(true);
-                      }}>
-                        Sign up
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
+                      }}
+                    >
+                      Sign up
+                    </Button>
+                    <MobileNavigation />
+                  </>
                 )}
-                <MobileNavigation />
               </div>
             ) : (
               <nav className="flex items-center space-x-4">
@@ -222,25 +207,14 @@ export function Header() {
                     </DropdownMenuContent>
                   </DropdownMenu>
                 ) : (
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button>Sign In</Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                      <DropdownMenuItem onClick={() => {
-                        setAuthMode("login");
-                        setShowAuthModal(true);
-                      }}>
-                        Sign in
-                      </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => {
-                        setAuthMode("signup");
-                        setShowAuthModal(true);
-                      }}>
-                        Sign up
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
+                  <Button
+                    onClick={() => {
+                      setAuthMode("signup");
+                      setShowAuthModal(true);
+                    }}
+                  >
+                    Sign up
+                  </Button>
                 )}
               </nav>
             )}

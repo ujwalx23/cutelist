@@ -48,7 +48,7 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
         toast({
           title: "Account may already exist",
           description:
-            "Try signing in instead 💜 If you forgot your password, contact us to get a magic link!",
+            "Try signing in 💜 If you just signed up, check your email to verify your account.",
           variant: "destructive",
         });
       } else {

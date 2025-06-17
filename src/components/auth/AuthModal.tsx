@@ -69,7 +69,7 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
           <DialogTitle>
-            {isSignUp ? "Create an account 💫" : "Sign in to your account"}
+            {isSignUp ? "Create an account💫" : "Sign in to your account 🔑"}
           </DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4 mt-4">

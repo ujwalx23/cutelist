@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
@@ -17,7 +16,7 @@ interface AuthModalProps {
 }
 
 export function AuthModal({ isOpen, onClose }: AuthModalProps) {
-  const [isSignUp, setIsSignUp] = useState(false);
+  const [isSignUp, setIsSignUp] = useState(true); // Default is Sign Up
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
@@ -46,7 +45,8 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
     } catch (error) {
       toast({
         title: "Oops!",
-        description: "Account doesn't exist or password is incorrect. Please try again, or sign up if you don’t have an account.",
+        description:
+          "Account doesn't exist or password is incorrect. Please try again, or sign up if you don’t have an account.",
         variant: "destructive",
       });
     } finally {
@@ -59,44 +59,37 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
           <DialogTitle>
-            {isSignUp ? "Create an account💫" : "Sign in to your account"}
+            {isSignUp ? "Create an account 💫" : "Sign in to your account"}
           </DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4 mt-4">
-          <div className="space-y-2">
-            <Input
-              type="email"
-              placeholder="Email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-            />
-          </div>
-          <div className="space-y-2">
-            <Input
-              type="password"
-              placeholder="Password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-            />
-          </div>
+          <Input
+            type="email"
+            placeholder="Email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            required
+          />
+          <Input
+            type="password"
+            placeholder="Password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            required
+          />
           <Button type="submit" className="w-full" disabled={loading}>
             {loading
               ? "Loading..."
               : isSignUp
-              ? "Create account✨"
+              ? "Create account ✨"
               : "Sign in"}
           </Button>
         </form>
         <div className="text-center mt-4">
-          <Button
-            variant="ghost"
-            onClick={() => setIsSignUp(!isSignUp)}
-          >
+          <Button variant="ghost" onClick={() => setIsSignUp(!isSignUp)}>
             {isSignUp
               ? "Already have an account? Sign in"
-              : "Don't have an account? Sign up!💜" }
+              : "Don't have an account? Sign up! 💜"}
           </Button>
         </div>
       </DialogContent>

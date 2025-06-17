@@ -81,15 +81,15 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
             {loading
               ? "Loading..."
               : isSignUp
-              ? "Create account ✨"
-              : "Sign in"}
+              ? "Create account "
+              : "Sign in✨"}
           </Button>
         </form>
         <div className="text-center mt-4">
           <Button variant="ghost" onClick={() => setIsSignUp(!isSignUp)}>
             {isSignUp
-              ? "Already have an account? Sign in"
-              : "Don't have an account? Sign up! 💜"}
+              ? "Already have an account? Sign in💜"
+              : "Don't have an account? Sign up!"}
           </Button>
         </div>
       </DialogContent>

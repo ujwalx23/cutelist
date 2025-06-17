@@ -91,7 +91,7 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
             {loading
               ? "Loading..."
               : isSignUp
-              ? "Create account 💜"
+              ? "Create account"
               : "Sign in ✨"}
           </Button>
         </form>

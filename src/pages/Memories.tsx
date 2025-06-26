@@ -26,22 +26,22 @@ const defaultQuotes: Quote[] = [
   {
     id: "default-1",
     user_id: "default",
-    content: "Don't stop doing good just because you don't get credit for it.",
-    author: "Keep doing what's right, even if no one recognizes it.",
+    content: "Your worth isn't defined by external validation.",
+    author: "Unknown",
     created_at: new Date().toISOString(),
   },
   {
     id: "default-2",
     user_id: "default",
-    content: "Small actions today can lead to big changes tomorrow.",
-    author: "Every effort counts, and consistency is key.",
+    content: "Small deeds done are better than great deeds planned.",
+    author: "Peter Marshall",
     created_at: new Date().toISOString(),
   },
   {
     id: "default-3",
     user_id: "default",
-    content: "Your worth isn't defined by external validation.",
-    author: "Focus on your values, passions, and strengths, rather than seeking approval from others.",
+    content: "Don't stop doing good just because you don't get credit for it.",
+    author: "Admin",
     created_at: new Date().toISOString(),
   },
 ];

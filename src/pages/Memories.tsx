@@ -49,10 +49,10 @@ const defaultQuotes: Quote[] = [
 const defaultMemory: Memory = {
   id: "default-memory",
   user_id: "default",
-  title: "Hiking with friends",
-  description: "Today was special, hiking with friends who never stop talking! Laughter, stories, and great views made it unforgettable",
+  title: "Nature's Calm",
+  description: "Let the rain wash away worries, and let peace bloom in every moment.😊",
   image_url: "/lovable-uploads/cd21a374-add7-423b-b4ba-e107778b5e3a.png",
-  tags: ["friends", "nature", "loving"],
+  tags: ["peace", "nature", "love"],
   created_at: new Date().toISOString(),
 };
 

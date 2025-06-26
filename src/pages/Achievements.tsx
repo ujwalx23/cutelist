@@ -38,8 +38,8 @@ const Achievements = () => {
   useEffect(() => {
     if (!user) {
       toast({
-        title: "Admin",
-        description: "Keep pushing. Small steps lead to big things. ",
+        title: "Authentication Required",
+        description: "Please sign in to view your progress.",
         variant: "default",
       });
     }

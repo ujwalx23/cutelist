@@ -5,99 +5,46 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/contexts/AuthContext";
-import { useToast } from "@/hooks/use-toast";
-import type { Quote } from "./types";
 
 interface AddQuoteModalProps {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-  quote?: Quote;
+  isOpen: boolean;
+  onClose: () => void;
+  onCreateQuote: (quoteData: { content: string; author: string }) => void;
+  isPending: boolean;
 }
 
-export const AddQuoteModal = ({ open, onOpenChange, quote }: AddQuoteModalProps) => {
-  const { user } = useAuth();
-  const { toast } = useToast();
-  const queryClient = useQueryClient();
-  
-  const [formData, setFormData] = useState({
-    content: quote?.content || "",
-    author: quote?.author || "",
+export const AddQuoteModal = ({
+  isOpen,
+  onClose,
+  onCreateQuote,
+  isPending,
+}: AddQuoteModalProps) => {
+  const [newQuote, setNewQuote] = useState({
+    content: "",
+    author: "",
   });
-
-  const createQuoteMutation = useMutation({
-    mutationFn: async (data: { content: string; author: string }) => {
-      if (!user) throw new Error("Must be logged in");
-
-      if (quote) {
-        // Update existing quote
-        const { data: result, error } = await supabase
-          .from('quotes')
-          .update({
-            content: data.content,
-            author: data.author
-          })
-          .eq('id', quote.id)
-          .select()
-          .single();
-        
-        if (error) throw error;
-        return result;
-      } else {
-        // Create new quote
-        const { data: result, error } = await supabase
-          .from('quotes')
-          .insert([{
-            content: data.content,
-            author: data.author,
-            user_id: user.id
-          }])
-          .select()
-          .single();
-        
-        if (error) throw error;
-        return result;
-      }
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['quotes'] });
-      toast({
-        title: quote ? "Quote updated" : "Quote created",
-        description: `Your quote has been successfully ${quote ? 'updated' : 'created'}.`,
-      });
-      handleClose();
-    },
-    onError: (error) => {
-      toast({
-        title: "Error", 
-        description: `Failed to ${quote ? 'update' : 'create'} quote. Please try again.`,
-        variant: "destructive",
-      });
-    }
-  });
-
-  const handleClose = () => {
-    onOpenChange(false);
-    setFormData({ content: "", author: "" });
-  };
 
   const handleSubmit = () => {
-    if (!formData.content.trim()) return;
-    createQuoteMutation.mutate(formData);
+    onCreateQuote(newQuote);
+  };
+
+  const handleClose = () => {
+    onClose();
+    setNewQuote({
+      content: "",
+      author: "",
+    });
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={isOpen} onOpenChange={handleClose}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>{quote ? 'Edit Quote' : 'Add Inspirational Quote'}</DialogTitle>
+          <DialogTitle>Add Inspirational Quote</DialogTitle>
           <DialogDescription>
-            {quote ? 'Update your quote' : 'Share your favorite quote with the community'}
+            Share your favorite quote with the community
           </DialogDescription>
         </DialogHeader>
-        
         <div className="space-y-4 py-2">
           <div className="space-y-2">
             <Label htmlFor="content">Quote</Label>
@@ -105,8 +52,8 @@ export const AddQuoteModal = ({ open, onOpenChange, quote }: AddQuoteModalProps)
               id="content"
               placeholder="Type your favorite quote here..."
               className="min-h-[120px]"
-              value={formData.content}
-              onChange={(e) => setFormData({ ...formData, content: e.target.value })}
+              value={newQuote.content}
+              onChange={(e) => setNewQuote({ ...newQuote, content: e.target.value })}
             />
           </div>
           <div className="space-y-2">
@@ -114,24 +61,23 @@ export const AddQuoteModal = ({ open, onOpenChange, quote }: AddQuoteModalProps)
             <Input
               id="author"
               placeholder="Who said or wrote this quote?"
-              value={formData.author}
-              onChange={(e) => setFormData({ ...formData, author: e.target.value })}
+              value={newQuote.author}
+              onChange={(e) => setNewQuote({ ...newQuote, author: e.target.value })}
             />
           </div>
         </div>
-        
         <div className="flex justify-end space-x-2 mt-4">
-          <Button variant="outline" onClick={handleClose}>
+          <Button 
+            variant="outline" 
+            onClick={handleClose}
+          >
             Cancel
           </Button>
           <Button 
             onClick={handleSubmit}
-            disabled={createQuoteMutation.isPending || !formData.content.trim()}
+            disabled={isPending || !newQuote.content.trim()}
           >
-            {createQuoteMutation.isPending ? 
-              (quote ? "Updating..." : "Adding...") : 
-              (quote ? "Update Quote" : "Share Quote")
-            }
+            {isPending ? "Adding..." : "Share Quote"}
           </Button>
         </div>
       </DialogContent>

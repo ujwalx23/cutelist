@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useRef } from "react";
 import { Header } from "@/components/Header";
 import { ThemeProvider } from "@/components/ThemeProvider";
@@ -16,9 +15,10 @@ import { useIsMobile } from "@/hooks/use-mobile";
 interface PomodoroSession {
   id: string;
   user_id: string;
-  duration: number;
-  type: "work" | "shortBreak" | "longBreak";
+  duration_minutes: number;
+  session_type: "work" | "short_break" | "long_break";
   completed_at: string;
+  created_at: string;
 }
 
 const Pomodoro = () => {
@@ -30,7 +30,7 @@ const Pomodoro = () => {
   const [minutes, setMinutes] = useState(25);
   const [seconds, setSeconds] = useState(0);
   const [isActive, setIsActive] = useState(false);
-  const [mode, setMode] = useState<"work" | "shortBreak" | "longBreak">("work");
+  const [mode, setMode] = useState<"work" | "short_break" | "long_break">("work");
   const [cycle, setCycle] = useState(0);
   const [sessionsCompleted, setSessionsCompleted] = useState(0);
   const [showHistory, setShowHistory] = useState(false);
@@ -38,39 +38,56 @@ const Pomodoro = () => {
   const timerRef = useRef<number | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
-  // Fetch completed sessions
-  const { data: completedSessions } = useQuery({
+  // Fetch completed sessions from database
+  const { data: completedSessions = [] } = useQuery({
     queryKey: ['pomodoro-sessions', user?.id],
     queryFn: async () => {
       if (!user) return [];
       
-      // In a real implementation, we would fetch from Supabase
-      // This is a placeholder for demonstration
-      return []; // Return empty array by default
+      const { data, error } = await supabase
+        .from('pomodoro_sessions')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('completed_at', { ascending: false })
+        .limit(50);
+      
+      if (error) throw error;
+      return data || [];
     },
-    enabled: !!user && showHistory
+    enabled: !!user
   });
 
-  // Save completed session
+  // Get today's completed sessions count
+  const todaySessionsCount = completedSessions.filter(session => {
+    const sessionDate = new Date(session.completed_at).toDateString();
+    const today = new Date().toDateString();
+    return sessionDate === today && session.session_type === 'work';
+  }).length;
+
+  // Save completed session to database
   const saveSessionMutation = useMutation({
-    mutationFn: async (sessionData: Omit<PomodoroSession, "id" | "user_id">) => {
+    mutationFn: async (sessionData: { 
+      session_type: "work" | "short_break" | "long_break"; 
+      duration_minutes: number 
+    }) => {
       if (!user) throw new Error("User not authenticated");
       
-      const newSession = {
-        ...sessionData,
-        user_id: user.id,
-      };
+      const { data, error } = await supabase
+        .from('pomodoro_sessions')
+        .insert([{
+          user_id: user.id,
+          session_type: sessionData.session_type,
+          duration_minutes: sessionData.duration_minutes,
+          completed_at: new Date().toISOString()
+        }])
+        .select()
+        .single();
       
-      // In a real implementation, we would save to Supabase
-      console.log("Would save pomodoro session:", newSession);
-      
-      return {
-        ...newSession,
-        id: Date.now().toString(),
-      };
+      if (error) throw error;
+      return data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({queryKey: ['pomodoro-sessions']});
+      queryClient.invalidateQueries({ queryKey: ['pomodoro-sessions'] });
       setSessionsCompleted(prev => prev + 1);
     }
   });
@@ -107,7 +124,7 @@ const Pomodoro = () => {
             if ('Notification' in window && Notification.permission === 'granted') {
               const title = mode === 'work' 
                 ? 'Work session completed!' 
-                : mode === 'shortBreak'
+                : mode === 'short_break'
                   ? 'Break time over!'
                   : 'Long break finished!';
                   
@@ -118,12 +135,12 @@ const Pomodoro = () => {
               new Notification(title, { body });
             }
             
-            // Save completed session if it was a work session
-            if (mode === "work" && user) {
+            // Save completed session if user is logged in
+            if (user) {
+              const duration = mode === "work" ? 25 : mode === "short_break" ? 5 : 15;
               saveSessionMutation.mutate({
-                duration: 25,
-                type: "work",
-                completed_at: new Date().toISOString(),
+                session_type: mode,
+                duration_minutes: duration,
               });
             }
             
@@ -134,11 +151,11 @@ const Pomodoro = () => {
               
               if (newCycle % 4 === 0) {
                 // After 4 work sessions, take a long break
-                setMode("longBreak");
+                setMode("long_break");
                 setMinutes(15);
               } else {
                 // Otherwise take a short break
-                setMode("shortBreak");
+                setMode("short_break");
                 setMinutes(5);
               }
               
@@ -185,7 +202,7 @@ const Pomodoro = () => {
     
     if (mode === "work") {
       setMinutes(25);
-    } else if (mode === "shortBreak") {
+    } else if (mode === "short_break") {
       setMinutes(5);
     } else {
       setMinutes(15);
@@ -194,13 +211,13 @@ const Pomodoro = () => {
     setSeconds(0);
   };
 
-  const handleModeChange = (newMode: "work" | "shortBreak" | "longBreak") => {
+  const handleModeChange = (newMode: "work" | "short_break" | "long_break") => {
     setIsActive(false);
     setMode(newMode);
     
     if (newMode === "work") {
       setMinutes(25);
-    } else if (newMode === "shortBreak") {
+    } else if (newMode === "short_break") {
       setMinutes(5);
     } else {
       setMinutes(15);
@@ -239,18 +256,18 @@ const Pomodoro = () => {
                       Work
                     </Button>
                     <Button
-                      onClick={() => handleModeChange("shortBreak")}
-                      variant={mode === "shortBreak" ? "default" : "outline"}
+                      onClick={() => handleModeChange("short_break")}
+                      variant={mode === "short_break" ? "default" : "outline"}
                       size={isMobile ? "sm" : "default"}
-                      className={mode === "shortBreak" ? "bg-cutelist-accent hover:bg-cutelist-accent/80" : ""}
+                      className={mode === "short_break" ? "bg-cutelist-accent hover:bg-cutelist-accent/80" : ""}
                     >
                       Short Break
                     </Button>
                     <Button
-                      onClick={() => handleModeChange("longBreak")}
-                      variant={mode === "longBreak" ? "default" : "outline"}
+                      onClick={() => handleModeChange("long_break")}
+                      variant={mode === "long_break" ? "default" : "outline"}
                       size={isMobile ? "sm" : "default"}
-                      className={mode === "longBreak" ? "bg-cutelist-primary hover:bg-cutelist-secondary" : ""}
+                      className={mode === "long_break" ? "bg-cutelist-primary hover:bg-cutelist-secondary" : ""}
                     >
                       Long Break
                     </Button>
@@ -260,7 +277,7 @@ const Pomodoro = () => {
                     className={`text-6xl md:text-7xl font-bold mb-8 p-6 rounded-full ${
                       mode === "work" 
                         ? "text-cutelist-primary" 
-                        : mode === "shortBreak" 
+                        : mode === "short_break" 
                           ? "text-cutelist-accent" 
                           : "text-cutelist-primary"
                     }`}
@@ -298,10 +315,10 @@ const Pomodoro = () => {
                 </div>
                 
                 <div className="flex items-center gap-2">
-                  {user && sessionsCompleted > 0 && (
+                  {user && todaySessionsCount > 0 && (
                     <Badge variant="outline" className="bg-cutelist-primary/10 border-cutelist-primary/30">
                       <CheckCircle2 className="h-3 w-3 mr-1" /> 
-                      {sessionsCompleted} sessions completed today
+                      {todaySessionsCount} sessions completed today
                     </Badge>
                   )}
                   {user && (
@@ -317,8 +334,18 @@ const Pomodoro = () => {
                   )}
                 </div>
               </div>
+
+              {!user && (
+                <Card className="w-full glass-card mb-6">
+                  <CardContent className="p-4 text-center">
+                    <p className="text-gray-400">
+                      Sign in to track your Pomodoro sessions and view your progress history!
+                    </p>
+                  </CardContent>
+                </Card>
+              )}
               
-              {showHistory && (
+              {showHistory && user && (
                 <Card className="w-full glass-card mb-6">
                   <CardContent className="p-4">
                     <h3 className="text-lg font-semibold mb-3">Session History</h3>
@@ -333,7 +360,8 @@ const Pomodoro = () => {
                               <CheckCircle2 className="h-4 w-4 text-green-500 mr-2" />
                               <div>
                                 <p className="text-sm">
-                                  {session.type === "work" ? "Work Session" : session.type === "shortBreak" ? "Short Break" : "Long Break"}
+                                  {session.session_type === "work" ? "Work Session" : 
+                                   session.session_type === "short_break" ? "Short Break" : "Long Break"}
                                 </p>
                                 <p className="text-xs text-gray-400">
                                   {format(new Date(session.completed_at), "MMM d, h:mm a")}
@@ -341,7 +369,7 @@ const Pomodoro = () => {
                               </div>
                             </div>
                             <Badge variant="outline" className="text-xs">
-                              {session.duration} min
+                              {session.duration_minutes} min
                             </Badge>
                           </div>
                         ))}
@@ -349,6 +377,7 @@ const Pomodoro = () => {
                     ) : (
                       <div className="text-center py-3 text-gray-400">
                         <p>No completed sessions yet</p>
+                        <p className="text-xs mt-1">Start your first Pomodoro to see your progress here!</p>
                       </div>
                     )}
                   </CardContent>

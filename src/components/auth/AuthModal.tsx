@@ -1,4 +1,5 @@
-import { useState } from "react";
+
+import React, { useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
@@ -55,7 +56,7 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
         toast({
           title: "Login failed",
           description:
-            "Incorrect email or password. Make sure your account is verified or sign up if you don’t have one.",
+            "Incorrect email or password. Make sure your account is verified or sign up if you don't have one.",
           variant: "destructive",
         });
       }

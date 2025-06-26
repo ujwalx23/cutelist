@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -34,7 +35,6 @@ import { Logo } from "./Logo";
 
 export function Header() {
   const [showAuthModal, setShowAuthModal] = useState(false);
-  const [authMode, setAuthMode] = useState<"login" | "signup">("signup");
   const { user, signOut } = useAuth();
   const { toast } = useToast();
   const isMobile = useIsMobile();
@@ -120,10 +120,7 @@ export function Header() {
               </Button>
             </>
           ) : (
-            <Button onClick={() => {
-              setAuthMode("signup");
-              setShowAuthModal(true);
-            }}>
+            <Button onClick={() => setShowAuthModal(true)}>
               Sign up
             </Button>
           )}
@@ -170,10 +167,7 @@ export function Header() {
                     <Button
                       size="sm"
                       className="ml-2"
-                      onClick={() => {
-                        setAuthMode("signup");
-                        setShowAuthModal(true);
-                      }}
+                      onClick={() => setShowAuthModal(true)}
                     >
                       Sign up
                     </Button>
@@ -207,12 +201,7 @@ export function Header() {
                     </DropdownMenuContent>
                   </DropdownMenu>
                 ) : (
-                  <Button
-                    onClick={() => {
-                      setAuthMode("signup");
-                      setShowAuthModal(true);
-                    }}
-                  >
+                  <Button onClick={() => setShowAuthModal(true)}>
                     Sign up
                   </Button>
                 )}
@@ -225,7 +214,6 @@ export function Header() {
       <AuthModal
         isOpen={showAuthModal}
         onClose={() => setShowAuthModal(false)}
-        mode={authMode}
       />
     </header>
   );

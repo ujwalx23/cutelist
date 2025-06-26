@@ -33,7 +33,7 @@ const defaultQuotes: Quote[] = [
     id: "default-2",
     user_id: "default",
     content: "Don't stop doing good just because you don't get credit for it.",
-    author: "Admin",
+    author: "Ujwal Singh",
     created_at: new Date().toISOString(),
   },
 ];

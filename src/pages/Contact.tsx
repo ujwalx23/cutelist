@@ -209,10 +209,10 @@ const Contact = () => {
                       <div>
                         <p className="text-sm font-medium">Email Us</p>
                         <a
-                          href="mailto:mebeingbetter23@gmail.com"
+                          href="mailto:cutelist23@gmail.com"
                           className="text-sm text-green-500 hover:underline"
                         >
-                          mebeingbetter23@gmail.com
+                          cutelist23@gmail.com
                         </a>
                       </div>
                     </div>
@@ -221,9 +221,9 @@ const Contact = () => {
                         <Phone className="h-5 w-5 text-cutelist-primary" />
                       </div>
                       <div>
-                        <p className="text-sm font-medium">Call Us</p>
+                        <p className="text-sm font-medium">Call or WhatsApp Us</p>
                         <span className="text-sm text-cutelist-accent">
-                          Unavailable (Sorry 🥹)
+                          7977339435
                         </span>
                       </div>
                     </div>

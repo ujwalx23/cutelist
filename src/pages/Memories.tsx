@@ -25,15 +25,8 @@ import { ViewMemoryModal } from "@/components/memories/ViewMemoryModal";
    {
      id: "default-1",
      user_id: "default",
-     content: "Your worth isn't defined by external validation.",
-     author: "Unknown",
-     created_at: new Date().toISOString(),
-   },
-   {
-     id: "default-2",
-     user_id: "default",
-     content: "Don't stop doing good just because you don't get credit for it.",
-     author: "Ujwal Singh",
+     content: "Fall in love with the process, and the results will come.",
+     author: "Eric Thomas",
      created_at: new Date().toISOString(),
    },
 ];
@@ -41,10 +34,10 @@ import { ViewMemoryModal } from "@/components/memories/ViewMemoryModal";
 const defaultMemory: Memory = {
   id: "default-memory",
   user_id: "default",
-  title: "Nature's Calm",
-  description: "Let the rain wash away worries, and let peace bloom in every moment.😊",
+  title: "Forest of Thoughts",
+  description: "Let nature wash away your worries, and let peace bloom in every moment.😊",
   image_url: "/lovable-uploads/cd21a374-add7-423b-b4ba-e107778b5e3a.png",
-  tags: ["peace", "nature", "love"],
+  tags: ["nature", "rainy"],
   created_at: new Date().toISOString(),
 };
 

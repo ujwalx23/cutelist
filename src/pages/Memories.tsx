@@ -1,5 +1,4 @@
 
-import { useState, useEffect } from "react";
 import { Header } from "@/components/Header";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -89,8 +88,8 @@ const Memories = () => {
   });
 
   // Combine default and user data
-  const allQuotes = [...defaultQuotes, ...userQuotes];
-  const allMemories = [...defaultMemories, ...userMemories];
+  const allQuotes: Quote[] = [...defaultQuotes, ...userQuotes];
+  const allMemories: Memory[] = [...defaultMemories, ...userMemories];
 
   return (
     <ThemeProvider>

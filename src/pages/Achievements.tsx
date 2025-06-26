@@ -1,10 +1,10 @@
 
 import { Header } from "@/components/Header";
 import { ThemeProvider } from "@/components/ThemeProvider";
-import { DailyAchievements } from "@/components/achievements/DailyAchievements";
-import { StatisticsCard } from "@/components/achievements/StatisticsCard";
-import { AchievementBadgesList } from "@/components/achievements/AchievementBadgesList";
-import { ActivityCalendar } from "@/components/achievements/ActivityCalendar";
+import DailyAchievements from "@/components/achievements/DailyAchievements";
+import StatisticsCard from "@/components/achievements/StatisticsCard";
+import AchievementBadgesList from "@/components/achievements/AchievementBadgesList";
+import ActivityCalendar from "@/components/achievements/ActivityCalendar";
 import { Card, CardContent } from "@/components/ui/card";
 import { useAuth } from "@/contexts/AuthContext";
 

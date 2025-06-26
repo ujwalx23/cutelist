@@ -192,7 +192,7 @@ const Notes = () => {
   };
 
   const canModify = (note: Note) => {
-    return user && (note.user_id === user.id || (note.isDefault && user));
+    return user && note.user_id === user.id;
   };
 
   return (

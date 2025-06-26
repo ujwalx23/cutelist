@@ -21,6 +21,41 @@ import { AddMemoryModal } from "@/components/memories/AddMemoryModal";
 import { AddQuoteModal } from "@/components/memories/AddQuoteModal";
 import { ViewMemoryModal } from "@/components/memories/ViewMemoryModal";
 
+// Default quotes and memory
+const defaultQuotes: Quote[] = [
+  {
+    id: "default-1",
+    user_id: "default",
+    content: "Don't stop doing good just because you don't get credit for it.",
+    author: "Keep doing what's right, even if no one recognizes it.",
+    created_at: new Date().toISOString(),
+  },
+  {
+    id: "default-2",
+    user_id: "default",
+    content: "Small actions today can lead to big changes tomorrow.",
+    author: "Every effort counts, and consistency is key.",
+    created_at: new Date().toISOString(),
+  },
+  {
+    id: "default-3",
+    user_id: "default",
+    content: "Your worth isn't defined by external validation.",
+    author: "Focus on your values, passions, and strengths, rather than seeking approval from others.",
+    created_at: new Date().toISOString(),
+  },
+];
+
+const defaultMemory: Memory = {
+  id: "default-memory",
+  user_id: "default",
+  title: "Hiking with friends",
+  description: "Today was special, hiking with friends who never stop talking! Laughter, stories, and great views made it unforgettable",
+  image_url: "/lovable-uploads/cd21a374-add7-423b-b4ba-e107778b5e3a.png",
+  tags: ["friends", "nature", "loving"],
+  created_at: new Date().toISOString(),
+};
+
 const Memories = () => {
   const { user, loading } = useAuth();
   const { toast } = useToast();
@@ -37,20 +72,8 @@ const Memories = () => {
   const [uploadProgress, setUploadProgress] = useState(0);
   const [favorites, setFavorites] = useState<string[]>([]);
 
-  // Check authentication
-  useEffect(() => {
-    if (!loading && !user) {
-      toast({
-        title: "Authentication Required",
-        description: "Please sign in to access memories and quotes.",
-        variant: "destructive",
-      });
-      navigate("/");
-    }
-  }, [user, navigate, toast, loading]);
-
   // Fetch memories
-  const { data: memories = [], isLoading: isLoadingMemories, refetch: refetchMemories } = useQuery({
+  const { data: userMemories = [], isLoading: isLoadingMemories, refetch: refetchMemories } = useQuery({
     queryKey: ['memories', user?.id],
     queryFn: async () => {
       if (!user) return [];
@@ -73,7 +96,7 @@ const Memories = () => {
   });
 
   // Fetch quotes
-  const { data: quotes = [], isLoading: isLoadingQuotes, refetch: refetchQuotes } = useQuery({
+  const { data: userQuotes = [], isLoading: isLoadingQuotes, refetch: refetchQuotes } = useQuery({
     queryKey: ['quotes', user?.id],
     queryFn: async () => {
       if (!user) return [];
@@ -94,6 +117,10 @@ const Memories = () => {
     },
     enabled: !!user && !loading && viewType === "quotes"
   });
+
+  // Combine default and user data
+  const allMemories = user ? [defaultMemory, ...userMemories] : [defaultMemory];
+  const allQuotes = user ? [...defaultQuotes, ...userQuotes] : defaultQuotes;
 
   // Create memory mutation
   const createMemoryMutation = useMutation({
@@ -211,6 +238,11 @@ const Memories = () => {
     mutationFn: async (memoryId: string) => {
       if (!user) throw new Error("User not authenticated");
       
+      // Prevent deletion of default memory
+      if (memoryId === "default-memory") {
+        throw new Error("Cannot delete default memory");
+      }
+      
       const { error } = await supabase
         .from('memories')
         .delete()
@@ -240,10 +272,15 @@ const Memories = () => {
     },
   });
 
-  // Delete quote mutation
+  // Delete quote mutation  
   const deleteQuoteMutation = useMutation({
     mutationFn: async (quoteId: string) => {
       if (!user) throw new Error("User not authenticated");
+      
+      // Prevent deletion of default quotes
+      if (quoteId.startsWith("default-")) {
+        throw new Error("Cannot delete default quotes");
+      }
       
       const { error } = await supabase
         .from('quotes')
@@ -333,6 +370,30 @@ const Memories = () => {
     }
   };
 
+  const handleAddMemory = () => {
+    if (!user) {
+      toast({
+        title: "Authentication Required",
+        description: "Please sign in to add memories.",
+        variant: "destructive",
+      });
+      return;
+    }
+    setIsAddModalOpen(true);
+  };
+
+  const handleAddQuote = () => {
+    if (!user) {
+      toast({
+        title: "Authentication Required", 
+        description: "Please sign in to add quotes.",
+        variant: "destructive",
+      });
+      return;
+    }
+    setIsAddQuoteModalOpen(true);
+  };
+
   // Show loading state while checking authentication
   if (loading) {
     return (
@@ -350,31 +411,7 @@ const Memories = () => {
     );
   }
 
-  // If not authenticated and finished loading, show sign-in prompt
-  if (!user && !loading) {
-    return (
-      <ThemeProvider>
-        <div className="min-h-screen flex flex-col bg-cutelist-dark">
-          <Header />
-          <main className="flex-1 container py-12 flex items-center justify-center">
-            <Card className="w-full max-w-md">
-              <CardHeader>
-                <CardTitle>Sign in Required</CardTitle>
-                <CardDescription>Please sign in to access memories and quotes</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <Button className="w-full" onClick={() => navigate("/")}>
-                  Go to Sign In
-                </Button>
-              </CardContent>
-            </Card>
-          </main>
-        </div>
-      </ThemeProvider>
-    );
-  }
-
-  // Main UI when authenticated
+  // Main UI (accessible to everyone)
   return (
     <ThemeProvider>
       <div className="min-h-screen flex flex-col bg-cutelist-dark">
@@ -385,11 +422,14 @@ const Memories = () => {
               <div>
                 <h1 className="text-4xl font-bold text-gradient mb-2">Memories & Inspirations</h1>
                 <p className="text-gray-400">Capture your precious moments and share inspiring quotes</p>
+                {!user && (
+                  <p className="text-sm text-gray-500 mt-2">Sign in to add your own memories and quotes</p>
+                )}
               </div>
               <div className="flex gap-3 mt-4 md:mt-0">
                 {viewType === "memories" && (
                   <Button
-                    onClick={() => setIsAddModalOpen(true)}
+                    onClick={handleAddMemory}
                     className="flex items-center gap-2"
                   >
                     <PlusCircle className="h-4 w-4" />
@@ -398,7 +438,7 @@ const Memories = () => {
                 )}
                 {viewType === "quotes" && (
                   <Button
-                    onClick={() => setIsAddQuoteModalOpen(true)}
+                    onClick={handleAddQuote}
                     className="flex items-center gap-2"
                   >
                     <PlusCircle className="h-4 w-4" />
@@ -421,22 +461,22 @@ const Memories = () => {
               
               <TabsContent value="memories">
                 <MemoriesTab
-                  memories={memories}
+                  memories={allMemories}
                   isLoading={isLoadingMemories}
                   favorites={favorites}
                   onToggleFavorite={toggleFavorite}
                   onViewMemory={handleViewMemory}
-                  onAddMemory={() => setIsAddModalOpen(true)}
+                  onAddMemory={handleAddMemory}
                 />
               </TabsContent>
               
               <TabsContent value="quotes">
                 <QuotesTab
-                  quotes={quotes}
+                  quotes={allQuotes}
                   isLoading={isLoadingQuotes}
                   currentUserId={user?.id}
                   onDeleteQuote={(id) => deleteQuoteMutation.mutate(id)}
-                  onAddQuote={() => setIsAddQuoteModalOpen(true)}
+                  onAddQuote={handleAddQuote}
                   isMobile={isMobile}
                 />
               </TabsContent>

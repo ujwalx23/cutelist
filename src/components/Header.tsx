@@ -63,36 +63,36 @@ export function Header() {
   const NavLinks = () => (
     <>
       <Link to="/" className="text-sm flex items-center font-medium hover:text-primary">
-        <Home className="h-4 w-4 mr-1" />
-        <span className="hidden md:inline">Home</span>
+        <Home className="h-4 w-4 mr-2" />
+        <span>Home</span>
       </Link>
       <Link to="/books" className="text-sm flex items-center font-medium hover:text-primary">
-        <Book className="h-4 w-4 mr-1" />
-        <span className="hidden md:inline">Books</span>
+        <Book className="h-4 w-4 mr-2" />
+        <span>Books</span>
       </Link>
       <Link to="/calendar" className="text-sm flex items-center font-medium hover:text-primary">
-        <Calendar className="h-4 w-4 mr-1" />
-        <span className="hidden md:inline">Calendar</span>
+        <Calendar className="h-4 w-4 mr-2" />
+        <span>Calendar</span>
       </Link>
       <Link to="/calculator" className="text-sm flex items-center font-medium hover:text-primary">
-        <Calculator className="h-4 w-4 mr-1" />
-        <span className="hidden md:inline">Calculator</span>
+        <Calculator className="h-4 w-4 mr-2" />
+        <span>Calculator</span>
       </Link>
       <Link to="/pomodoro" className="text-sm flex items-center font-medium hover:text-primary">
-        <Clock className="h-4 w-4 mr-1" />
-        <span className="hidden md:inline">Pomodoro</span>
+        <Clock className="h-4 w-4 mr-2" />
+        <span>Pomodoro</span>
       </Link>
       <Link to="/notes" className="text-sm flex items-center font-medium hover:text-primary">
-        <FileText className="h-4 w-4 mr-1" />
-        <span className="hidden md:inline">Notes</span>
+        <FileText className="h-4 w-4 mr-2" />
+        <span>Notes</span>
       </Link>
       <Link to="/achievements" className="text-sm flex items-center font-medium hover:text-primary">
-        <Trophy className="h-4 w-4 mr-1" />
-        <span className="hidden md:inline">Achievements</span>
+        <Trophy className="h-4 w-4 mr-2" />
+        <span>Achievements</span>
       </Link>
       <Link to="/memories" className="text-sm flex items-center font-medium hover:text-primary">
-        <Heart className="h-4 w-4 mr-1" />
-        <span className="hidden md:inline">Memories</span>
+        <Heart className="h-4 w-4 mr-2" />
+        <span>Memories</span>
       </Link>
       <Link to="/contact" className="text-sm font-medium hover:text-primary">
         Contact

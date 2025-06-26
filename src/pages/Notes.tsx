@@ -1,419 +1,418 @@
-
 import { useState, useEffect } from "react";
 import { Header } from "@/components/Header";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Badge } from "@/components/ui/badge";
-import { useToast } from "@/hooks/use-toast";
-import { Plus, Edit, Trash2, Save, X } from "lucide-react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Plus, Search, Trash, Edit, Save, FileText } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
+import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 
 interface Note {
   id: string;
   title: string;
-  content?: string;
-  date?: string;
-  created_at: string;
-  user_id: string;
-  isDefault?: boolean;
+  content: string;
+  date: Date;
 }
 
 const Notes = () => {
+  const [notes, setNotes] = useState<Note[]>([]);
+  const [title, setTitle] = useState("");
+  const [content, setContent] = useState("");
+  const [searchTerm, setSearchTerm] = useState("");
+  const [editMode, setEditMode] = useState<string | null>(null);
+  const [editTitle, setEditTitle] = useState("");
+  const [editContent, setEditContent] = useState("");
+  const [isLoading, setIsLoading] = useState(true);
   const { user } = useAuth();
   const { toast } = useToast();
-  const queryClient = useQueryClient();
-  const [editingNote, setEditingNote] = useState<string | null>(null);
-  const [newNote, setNewNote] = useState({ title: "", content: "" });
-  const [showAddForm, setShowAddForm] = useState(false);
 
-  // Default notes that are visible to all users
-  const defaultNotes: Note[] = [
-    {
-      id: "default-1",
-      title: "Welcome to Notes",
-      content: "This is your personal note-taking space. Sign in to create, edit, and manage your own notes!",
-      created_at: new Date().toISOString(),
-      user_id: "default",
-      isDefault: true
-    },
-    {
-      id: "default-2", 
-      title: "Getting Started",
-      content: "• Click the + button to add new notes\n• Edit notes by clicking the edit icon\n• Delete notes you no longer need\n• Your notes are automatically saved",
-      created_at: new Date().toISOString(),
-      user_id: "default",
-      isDefault: true
+  // Load notes from Supabase on component mount
+  useEffect(() => {
+    const fetchNotes = async () => {
+      if (!user) {
+        // Set default notes for non-logged in users
+        setDefaultNotes();
+        setIsLoading(false);
+        return;
+      }
+
+      try {
+        const { data, error } = await supabase
+          .from("notes")
+          .select("*")
+          .eq("user_id", user.id)
+          .order("date", { ascending: false });
+
+        if (error) throw error;
+
+        if (data && data.length > 0) {
+          // Convert string dates back to Date objects
+          const notesWithDateObjects = data.map((note) => ({
+            id: note.id,
+            title: note.title,
+            content: note.content || "",
+            date: new Date(note.date || note.created_at),
+          }));
+          setNotes(notesWithDateObjects);
+        } else {
+          // No notes found for the user, set default notes
+          setDefaultNotes();
+        }
+      } catch (error) {
+        console.error("Error fetching notes:", error);
+        toast({
+          title: "Error loading notes",
+          description: "Failed to load your notes.",
+          variant: "destructive",
+        });
+        
+        // Fallback to localStorage in case of connection error
+        loadNotesFromLocalStorage();
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchNotes();
+  }, [user, toast]);
+  
+  // Load notes from localStorage as fallback
+  const loadNotesFromLocalStorage = () => {
+    if (user) {
+      const storageKey = `notes-${user.id}`;
+      const storedNotes = localStorage.getItem(storageKey);
+      
+      if (storedNotes) {
+        try {
+          const parsedNotes = JSON.parse(storedNotes);
+          // Convert string dates back to Date objects
+          const notesWithDateObjects = parsedNotes.map((note: any) => ({
+            ...note,
+            date: new Date(note.date)
+          }));
+          setNotes(notesWithDateObjects);
+        } catch (error) {
+          console.error("Error parsing stored notes:", error);
+          // If there's an error parsing, initialize with default notes
+          setDefaultNotes();
+        }
+      } else {
+        // If no notes are found, initialize with default notes
+        setDefaultNotes();
+      }
     }
-  ];
+  };
 
-  // Fetch user notes
-  const { data: userNotes = [] } = useQuery({
-    queryKey: ['notes', user?.id],
-    queryFn: async () => {
-      if (!user) return [];
+  // Set default notes if needed
+  const setDefaultNotes = () => {
+    const defaultNotes = [
+      { 
+        id: "note1", 
+        title: "Welcome Note", 
+        content: "Welcome to CuteList Notes! This is a simple note-taking app to help you organize your thoughts and ideas.", 
+        date: new Date()
+      },
+      { 
+        id: "note2", 
+        title: "Shopping List", 
+        content: "- Milk\n- Pens\n- Medicine\n- Apples\n- Chocolate", 
+        date: new Date(new Date().setDate(new Date().getDate() + 1))
+      },
+    ];
+    setNotes(defaultNotes);
+  };
+  
+  // Save notes to localStorage as backup when they change
+  useEffect(() => {
+    if (user && notes.length > 0) {
+      const storageKey = `notes-${user.id}`;
+      localStorage.setItem(storageKey, JSON.stringify(notes));
+    }
+  }, [notes, user]);
+
+  const addNote = async () => {
+    if (!title.trim() || !user) return;
+    
+    try {
+      // Add note to Supabase
+      const now = new Date();
       const { data, error } = await supabase
-        .from('notes')
-        .select('*')
-        .eq('user_id', user.id)
-        .order('created_at', { ascending: false });
-      
-      if (error) throw error;
-      return data || [];
-    },
-    enabled: !!user
-  });
-
-  // Combine default and user notes
-  const allNotes = user ? [...userNotes, ...defaultNotes] : defaultNotes;
-
-  // Add note mutation
-  const addNoteMutation = useMutation({
-    mutationFn: async (note: { title: string; content: string }) => {
-      if (!user) throw new Error("Must be logged in to add notes");
-      
-      const { data, error } = await supabase
-        .from('notes')
-        .insert([{
-          title: note.title,
-          content: note.content,
-          user_id: user.id
-        }])
+        .from("notes")
+        .insert({
+          user_id: user.id,
+          title: title.trim(),
+          content: content,
+          date: now.toISOString(),
+        })
         .select()
         .single();
-      
+
       if (error) throw error;
-      return data;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['notes'] });
-      setNewNote({ title: "", content: "" });
-      setShowAddForm(false);
+
+      const newNote: Note = {
+        id: data.id,
+        title: data.title,
+        content: data.content || "",
+        date: new Date(data.date),
+      };
+      
+      setNotes([newNote, ...notes]);
+      setTitle("");
+      setContent("");
+      
       toast({
         title: "Note added",
-        description: "Your note has been successfully created.",
+        description: `"${title}" has been added to your notes.`,
+      });
+    } catch (error) {
+      console.error("Error adding note:", error);
+      toast({
+        title: "Error adding note",
+        description: "Failed to save your note. Please try again.",
+        variant: "destructive",
       });
     }
-  });
+  };
 
-  // Update note mutation
-  const updateNoteMutation = useMutation({
-    mutationFn: async ({ id, title, content }: { id: string; title: string; content: string }) => {
-      if (!user) throw new Error("Must be logged in to update notes");
-      
-      const { data, error } = await supabase
-        .from('notes')
-        .update({ title, content })
-        .eq('id', id)
-        .eq('user_id', user.id)
-        .select()
-        .single();
-      
+  const startEdit = (note: Note) => {
+    setEditMode(note.id);
+    setEditTitle(note.title);
+    setEditContent(note.content);
+  };
+
+  const saveEdit = async (id: string) => {
+    if (!user) return;
+    
+    try {
+      const now = new Date();
+      // Update note in Supabase
+      const { error } = await supabase
+        .from("notes")
+        .update({
+          title: editTitle,
+          content: editContent,
+          date: now.toISOString(),
+        })
+        .eq("id", id)
+        .eq("user_id", user.id);
+
       if (error) throw error;
-      return data;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['notes'] });
-      setEditingNote(null);
+      
+      setNotes(
+        notes.map((note) =>
+          note.id === id
+            ? { ...note, title: editTitle, content: editContent, date: now }
+            : note
+        )
+      );
+      setEditMode(null);
+      
       toast({
         title: "Note updated",
-        description: "Your note has been successfully updated.",
+        description: "Your note has been updated successfully.",
+      });
+    } catch (error) {
+      console.error("Error updating note:", error);
+      toast({
+        title: "Error updating note",
+        description: "Failed to update your note. Please try again.",
+        variant: "destructive",
       });
     }
-  });
+  };
 
-  // Delete note mutation
-  const deleteNoteMutation = useMutation({
-    mutationFn: async (id: string) => {
-      if (!user) throw new Error("Must be logged in to delete notes");
-      
+  const removeNote = async (id: string) => {
+    if (!user) return;
+    
+    // Skip Supabase for default notes
+    if (id === "note1" || id === "note2") {
+      setNotes(notes.filter((note) => note.id !== id));
+      return;
+    }
+    
+    try {
+      // Remove note from Supabase
       const { error } = await supabase
-        .from('notes')
+        .from("notes")
         .delete()
-        .eq('id', id)
-        .eq('user_id', user.id);
-      
+        .eq("id", id)
+        .eq("user_id", user.id);
+
       if (error) throw error;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['notes'] });
+      
+      setNotes(notes.filter((note) => note.id !== id));
+      
       toast({
         title: "Note deleted",
-        description: "Your note has been successfully deleted.",
+        description: "Your note has been deleted.",
       });
-    }
-  });
-
-  const handleAddNote = () => {
-    if (!user) {
+    } catch (error) {
+      console.error("Error deleting note:", error);
       toast({
-        title: "Authentication Required",
-        description: "Please sign in to create notes.",
+        title: "Error deleting note",
+        description: "Failed to delete your note. Please try again.",
         variant: "destructive",
       });
-      return;
-    }
-    
-    if (newNote.title.trim()) {
-      addNoteMutation.mutate(newNote);
     }
   };
 
-  const handleUpdateNote = (id: string, title: string, content: string) => {
-    if (!user) {
-      toast({
-        title: "Authentication Required", 
-        description: "Please sign in to edit notes.",
-        variant: "destructive",
-      });
-      return;
-    }
-    
-    updateNoteMutation.mutate({ id, title, content });
-  };
+  const filteredNotes = notes.filter(
+    (note) =>
+      note.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      note.content.toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
-  const handleDeleteNote = (id: string) => {
-    if (!user) {
-      toast({
-        title: "Authentication Required",
-        description: "Please sign in to delete notes.",
-        variant: "destructive",
-      });
-      return;
-    }
-    
-    if (window.confirm("Are you sure you want to delete this note?")) {
-      deleteNoteMutation.mutate(id);
-    }
-  };
-
-  const canModify = (note: Note) => {
-    return user && (note.user_id === user.id || (note.isDefault && user));
+  const formatDate = (date: Date) => {
+    return new Intl.DateTimeFormat('en-US', { 
+      year: 'numeric', 
+      month: 'short', 
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    }).format(date);
   };
 
   return (
     <ThemeProvider>
       <div className="min-h-screen flex flex-col bg-cutelist-dark">
         <Header />
-        <main className="flex-1 container py-8 px-4">
-          <div className="max-w-4xl mx-auto">
-            <div className="flex justify-between items-center mb-8">
-              <div>
-                <h1 className="text-4xl font-bold mb-2 text-gradient">
-                  My Notes
-                </h1>
-                <p className="text-gray-400">
-                  Capture your thoughts and ideas
-                </p>
-              </div>
-              <Button
-                onClick={() => {
-                  if (!user) {
-                    toast({
-                      title: "Authentication Required",
-                      description: "Please sign in to create notes.",
-                      variant: "destructive",
-                    });
-                    return;
-                  }
-                  setShowAddForm(true);
-                }}
-                className="bg-cutelist-primary hover:bg-cutelist-secondary"
-              >
-                <Plus className="h-4 w-4 mr-2" />
-                Add Note
-              </Button>
-            </div>
+        <main className="flex-1 container py-12">
+          <div className="max-w-5xl mx-auto px-4">
+            <div className="flex flex-col items-center mb-8">
+              <h1 className="text-4xl font-bold text-center mb-2 text-gradient">
+                My Notes
+              </h1>
+              <p className="text-center text-gray-400 mb-6">
+                Keep track of your ideas, lists, and thoughts
+              </p>
 
-            {!user && (
-              <Card className="glass-card mb-6">
-                <CardContent className="p-6 text-center">
-                  <p className="text-gray-400">
-                    Sign in to create, edit, and manage your personal notes. Browse the default notes below to see what's possible!
-                  </p>
-                </CardContent>
-              </Card>
-            )}
+              {isLoading ? (
+                <div className="flex justify-center items-center h-64">
+                  <p className="text-gray-400">Loading your notes...</p>
+                </div>
+              ) : (
+                <>
+                  {user ? (
+                    <div className="w-full max-w-3xl glass-card p-6 rounded-xl mb-8">
+                      <h2 className="text-xl font-semibold mb-4">Create New Note</h2>
+                      <div className="space-y-4">
+                        <Input
+                          placeholder="Note title"
+                          value={title}
+                          onChange={(e) => setTitle(e.target.value)}
+                          className="bg-cutelist-dark/50 border-cutelist-primary/30"
+                        />
+                        <Textarea
+                          placeholder="Note content"
+                          value={content}
+                          onChange={(e) => setContent(e.target.value)}
+                          className="min-h-[100px] bg-cutelist-dark/50 border-cutelist-primary/30"
+                        />
+                        <Button onClick={addNote} className="bg-cutelist-primary hover:bg-cutelist-secondary">
+                          <Plus className="h-4 w-4 mr-1" /> Add Note
+                        </Button>
+                      </div>
+                    </div>
+                  ) : (
+                    <Card className="w-full max-w-3xl mb-8 bg-cutelist-dark/30 backdrop-blur-sm border-cutelist-primary/20">
+                      <CardHeader>
+                        <CardTitle>Sign in to add notes</CardTitle>
+                        <CardDescription>Create an account to start taking notes</CardDescription>
+                      </CardHeader>
+                    </Card>
+                  )}
 
-            {showAddForm && (
-              <Card className="glass-card mb-6">
-                <CardHeader>
-                  <CardTitle>Add New Note</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <Input
-                    placeholder="Note title..."
-                    value={newNote.title}
-                    onChange={(e) => setNewNote({ ...newNote, title: e.target.value })}
-                  />
-                  <Textarea
-                    placeholder="Write your note here..."
-                    value={newNote.content}
-                    onChange={(e) => setNewNote({ ...newNote, content: e.target.value })}
-                    rows={4}
-                  />
-                  <div className="flex gap-2">
-                    <Button onClick={handleAddNote} disabled={addNoteMutation.isPending}>
-                      <Save className="h-4 w-4 mr-2" />
-                      Save Note
-                    </Button>
-                    <Button
-                      variant="outline"
-                      onClick={() => {
-                        setShowAddForm(false);
-                        setNewNote({ title: "", content: "" });
-                      }}
-                    >
-                      <X className="h-4 w-4 mr-2" />
-                      Cancel
-                    </Button>
+                  <div className="w-full max-w-3xl mb-6">
+                    <div className="relative">
+                      <Search className="absolute left-3 top-3 h-4 w-4 text-gray-500" />
+                      <Input
+                        placeholder="Search notes..."
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        className="pl-10 bg-cutelist-dark/50 border-cutelist-primary/30"
+                      />
+                    </div>
                   </div>
-                </CardContent>
-              </Card>
-            )}
 
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-              {allNotes.map((note) => (
-                <NoteCard
-                  key={note.id}
-                  note={note}
-                  isEditing={editingNote === note.id}
-                  onEdit={() => canModify(note) ? setEditingNote(note.id) : null}
-                  onSave={handleUpdateNote}
-                  onCancel={() => setEditingNote(null)}
-                  onDelete={handleDeleteNote}
-                  canModify={canModify(note)}
-                />
-              ))}
+                  <div className="w-full max-w-3xl">
+                    {filteredNotes.length === 0 ? (
+                      <div className="text-center py-10">
+                        <div className="flex justify-center mb-4">
+                          <FileText className="h-12 w-12 text-cutelist-primary opacity-50" />
+                        </div>
+                        <h3 className="text-lg font-medium text-cutelist-primary mb-2">No notes found</h3>
+                        <p className="text-gray-400">Add some notes or try a different search</p>
+                      </div>
+                    ) : (
+                      <div className="space-y-4">
+                        {filteredNotes.map((note) => (
+                          <Card key={note.id} className="bg-cutelist-dark/30 backdrop-blur-sm border-cutelist-primary/20">
+                            <CardHeader className="pb-2">
+                              {editMode === note.id ? (
+                                <Input
+                                  value={editTitle}
+                                  onChange={(e) => setEditTitle(e.target.value)}
+                                  className="font-bold text-lg mb-1 bg-cutelist-dark/50 border-cutelist-primary/30"
+                                />
+                              ) : (
+                                <CardTitle>{note.title}</CardTitle>
+                              )}
+                              <CardDescription>{formatDate(note.date)}</CardDescription>
+                            </CardHeader>
+                            <CardContent className="pb-2">
+                              {editMode === note.id ? (
+                                <Textarea
+                                  value={editContent}
+                                  onChange={(e) => setEditContent(e.target.value)}
+                                  className="min-h-[100px] bg-cutelist-dark/50 border-cutelist-primary/30"
+                                />
+                              ) : (
+                                <p className="whitespace-pre-wrap text-gray-300">{note.content}</p>
+                              )}
+                            </CardContent>
+                            <CardFooter className="pt-2 flex justify-end gap-2">
+                              {editMode === note.id ? (
+                                <Button 
+                                  variant="default" 
+                                  onClick={() => saveEdit(note.id)}
+                                  className="bg-cutelist-primary hover:bg-cutelist-secondary"
+                                  size="sm"
+                                >
+                                  <Save className="h-4 w-4 mr-1" /> Save
+                                </Button>
+                              ) : (
+                                <Button 
+                                  variant="outline" 
+                                  onClick={() => startEdit(note)}
+                                  size="sm"
+                                >
+                                  <Edit className="h-4 w-4 mr-1" /> Edit
+                                </Button>
+                              )}
+                              <Button 
+                                variant="ghost" 
+                                onClick={() => removeNote(note.id)}
+                                size="sm"
+                              >
+                                <Trash className="h-4 w-4 text-red-400" />
+                              </Button>
+                            </CardFooter>
+                          </Card>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </>
+              )}
             </div>
-
-            {allNotes.length === 0 && (
-              <div className="text-center py-12">
-                <p className="text-gray-400 mb-4">No notes yet</p>
-                <Button
-                  onClick={() => {
-                    if (!user) {
-                      toast({
-                        title: "Authentication Required",
-                        description: "Please sign in to create notes.",
-                        variant: "destructive",
-                      });
-                      return;
-                    }
-                    setShowAddForm(true);
-                  }}
-                  className="bg-cutelist-primary hover:bg-cutelist-secondary"
-                >
-                  <Plus className="h-4 w-4 mr-2" />
-                  Create your first note
-                </Button>
-              </div>
-            )}
           </div>
         </main>
       </div>
     </ThemeProvider>
   );
 };
-
-// Note Card Component
-interface NoteCardProps {
-  note: Note;
-  isEditing: boolean;
-  onEdit: () => void;
-  onSave: (id: string, title: string, content: string) => void;
-  onCancel: () => void;
-  onDelete: (id: string) => void;
-  canModify: boolean;
-}
-
-function NoteCard({ note, isEditing, onEdit, onSave, onCancel, onDelete, canModify }: NoteCardProps) {
-  const [editTitle, setEditTitle] = useState(note.title);
-  const [editContent, setEditContent] = useState(note.content || "");
-
-  useEffect(() => {
-    if (isEditing) {
-      setEditTitle(note.title);
-      setEditContent(note.content || "");
-    }
-  }, [isEditing, note]);
-
-  const handleSave = () => {
-    onSave(note.id, editTitle, editContent);
-  };
-
-  return (
-    <Card className="glass-card">
-      <CardContent className="p-4">
-        {isEditing ? (
-          <div className="space-y-3">
-            <Input
-              value={editTitle}
-              onChange={(e) => setEditTitle(e.target.value)}
-              className="font-semibold"
-            />
-            <Textarea
-              value={editContent}
-              onChange={(e) => setEditContent(e.target.value)}
-              rows={4}
-            />
-            <div className="flex gap-2">
-              <Button size="sm" onClick={handleSave}>
-                <Save className="h-3 w-3 mr-1" />
-                Save
-              </Button>
-              <Button size="sm" variant="outline" onClick={onCancel}>
-                <X className="h-3 w-3 mr-1" />
-                Cancel
-              </Button>
-            </div>
-          </div>
-        ) : (
-          <>
-            <div className="flex justify-between items-start mb-2">
-              <h3 className="font-semibold text-lg text-white line-clamp-2">
-                {note.title}
-              </h3>
-              {note.isDefault && (
-                <Badge variant="outline" className="text-xs ml-2">
-                  Default
-                </Badge>
-              )}
-            </div>
-            {note.content && (
-              <p className="text-gray-400 text-sm mb-3 line-clamp-3">
-                {note.content}
-              </p>
-            )}
-            <div className="flex justify-between items-center">
-              <span className="text-xs text-gray-500">
-                {new Date(note.created_at).toLocaleDateString()}
-              </span>
-              {canModify && (
-                <div className="flex gap-1">
-                  <Button size="sm" variant="ghost" onClick={onEdit}>
-                    <Edit className="h-3 w-3" />
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    onClick={() => onDelete(note.id)}
-                    className="text-red-400 hover:text-red-300"
-                  >
-                    <Trash2 className="h-3 w-3" />
-                  </Button>
-                </div>
-              )}
-            </div>
-          </>
-        )}
-      </CardContent>
-    </Card>
-  );
-}
 
 export default Notes;

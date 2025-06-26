@@ -21,22 +21,22 @@ import { AddQuoteModal } from "@/components/memories/AddQuoteModal";
 import { ViewMemoryModal } from "@/components/memories/ViewMemoryModal";
 
 // Default quotes and memory
-// const defaultQuotes: Quote[] = [
-//   {
-//     id: "default-1",
-//     user_id: "default",
-//     content: "Your worth isn't defined by external validation.",
-//     author: "Unknown",
-//     created_at: new Date().toISOString(),
-//   },
-//   {
-//     id: "default-2",
-//     user_id: "default",
-//     content: "Don't stop doing good just because you don't get credit for it.",
-//     author: "Ujwal Singh",
-//     created_at: new Date().toISOString(),
-//   },
-// ];
+ const defaultQuotes: Quote[] = [
+   {
+     id: "default-1",
+     user_id: "default",
+     content: "Your worth isn't defined by external validation.",
+     author: "Unknown",
+     created_at: new Date().toISOString(),
+   },
+   {
+     id: "default-2",
+     user_id: "default",
+     content: "Don't stop doing good just because you don't get credit for it.",
+     author: "Ujwal Singh",
+     created_at: new Date().toISOString(),
+   },
+];
 
 const defaultMemory: Memory = {
   id: "default-memory",

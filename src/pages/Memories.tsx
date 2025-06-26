@@ -32,13 +32,6 @@ const defaultQuotes: Quote[] = [
   {
     id: "default-2",
     user_id: "default",
-    content: "Small deeds done are better than great deeds planned.",
-    author: "Peter Marshall",
-    created_at: new Date().toISOString(),
-  },
-  {
-    id: "default-3",
-    user_id: "default",
     content: "Don't stop doing good just because you don't get credit for it.",
     author: "Admin",
     created_at: new Date().toISOString(),

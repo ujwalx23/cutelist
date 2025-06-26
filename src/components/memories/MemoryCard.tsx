@@ -26,6 +26,7 @@ interface MemoryCardProps {
   onViewMemory: (memory: Memory) => void;
   isFavorite: boolean;
   onToggleFavorite: (id: string) => void;
+  currentUserId?: string;
 }
 
 export const MemoryCard = ({
@@ -33,6 +34,7 @@ export const MemoryCard = ({
   onViewMemory,
   isFavorite,
   onToggleFavorite,
+  currentUserId,
 }: MemoryCardProps) => {
   return (
     <Card 

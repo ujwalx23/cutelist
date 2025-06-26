@@ -28,12 +28,15 @@ export const QuoteCard = ({
   currentUserId,
   onDelete,
 }: QuoteProps) => {
+  // Allow deletion if user is signed in and either owns the quote or it's a default quote
+  const canDelete = currentUserId && (user_id === currentUserId || user_id === "default");
+
   return (
     <Card className="overflow-hidden">
       <CardHeader className="p-4">
         <div className="flex justify-between items-start">
           <Quote className="h-6 w-6 text-cutelist-primary/80" />
-          {user_id === currentUserId && (
+          {canDelete && (
             <Button 
               variant="ghost" 
               size="icon" 

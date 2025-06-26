@@ -1,5 +1,4 @@
 
-
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -24,6 +23,8 @@ import {
   Menu,
   Trophy,
   Heart,
+  Mail,
+  LogOut,
 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -94,8 +95,9 @@ export function Header() {
         <Heart className="h-4 w-4 mr-2" />
         <span>Memories</span>
       </Link>
-      <Link to="/contact" className="text-sm font-medium hover:text-primary">
-        Contact
+      <Link to="/contact" className="text-sm flex items-center font-medium hover:text-primary">
+        <Mail className="h-4 w-4 mr-2" />
+        <span>Contact</span>
       </Link>
     </>
   );
@@ -116,8 +118,9 @@ export function Header() {
                 <User className="h-5 w-5" />
                 <span>Profile</span>
               </Link>
-              <Button variant="ghost" className="justify-start px-2" onClick={handleSignOut}>
-                Sign Out
+              <Button variant="ghost" className="justify-start px-2 flex items-center space-x-2" onClick={handleSignOut}>
+                <LogOut className="h-4 w-4" />
+                <span>Sign Out</span>
               </Button>
             </>
           ) : (
@@ -222,4 +225,3 @@ export function Header() {
     </header>
   );
 }
-

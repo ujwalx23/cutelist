@@ -21,6 +21,7 @@ interface ViewMemoryModalProps {
   onDelete: (id: string) => void;
   isFavorite: boolean;
   onToggleFavorite: (id: string) => void;
+  currentUserId?: string;
 }
 
 export const ViewMemoryModal = ({
@@ -30,6 +31,7 @@ export const ViewMemoryModal = ({
   onDelete,
   isFavorite,
   onToggleFavorite,
+  currentUserId,
 }: ViewMemoryModalProps) => {
   if (!memory) return null;
 

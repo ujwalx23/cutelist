@@ -96,7 +96,7 @@ export function TaskContainer() {
       setTasks((prev) => [newTask, ...prev]);
       
       toast({
-        title: "Task added!",
+        title: "Task added! ✨",
         description: "Your new task has been added to your list.",
       });
     } catch (error) {
@@ -129,7 +129,7 @@ export function TaskContainer() {
       );
 
       toast({
-        title: "Task updated!",
+        title: "Task updated! 📝",
         description: "Your task has been successfully updated.",
       });
     } catch (error) {
@@ -140,22 +140,6 @@ export function TaskContainer() {
         variant: "destructive",
       });
     }
-  };
-
-  const markNotDoneThisTime = async (id: string) => {
-    if (!user) return;
-
-    setTasks((prev) =>
-      prev.map((t) =>
-        t.id === id ? { ...t, notDoneThisTime: true, completed: false } : t
-      )
-    );
-
-    toast({
-      title: "Task marked as not done this time",
-      description: "This task can be improved for next time.",
-      variant: "default",
-    });
   };
 
   const toggleTask = async (id: string) => {
@@ -176,9 +160,14 @@ export function TaskContainer() {
       // Update state after successful database update
       setTasks((prev) =>
         prev.map((t) =>
-          t.id === id ? { ...t, completed: !t.completed, notDoneThisTime: false } : t
+          t.id === id ? { ...t, completed: !t.completed } : t
         )
       );
+
+      toast({
+        title: task.completed ? "Task marked as pending 🔄" : "Task completed! 🎉",
+        description: task.completed ? "Keep going!" : "Great job!",
+      });
     } catch (error) {
       console.error('Error toggling task:', error);
       toast({
@@ -205,7 +194,7 @@ export function TaskContainer() {
       setTasks((prev) => prev.filter((task) => task.id !== id));
       
       toast({
-        title: "Task deleted!",
+        title: "Task deleted! 🗑️",
         description: "Your task has been removed from your list.",
       });
     } catch (error) {
@@ -220,7 +209,7 @@ export function TaskContainer() {
 
   if (!user) {
     return (
-      <div className="text-center py-10">
+      <div className="text-center py-10 animate-fade-in">
         <h3 className="text-lg font-medium text-cutelist-primary mb-2">Please sign in</h3>
         <Button variant="link" onClick={() => {
           const authModal = document.querySelector('[role="dialog"]');
@@ -236,11 +225,11 @@ export function TaskContainer() {
   }
 
   return (
-    <div className="glass-card p-6 rounded-xl w-full max-w-md">
+    <div className="glass-card p-6 rounded-xl w-full max-w-md animate-fade-in hover:shadow-xl transition-all duration-300">
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-2xl font-bold text-center text-gradient">My Tasks</h2>
         {isLoading && (
-          <div className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+          <div className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 animate-pulse">
             Loading...
           </div>
         )}
@@ -251,7 +240,6 @@ export function TaskContainer() {
         onToggleTask={toggleTask}
         onDeleteTask={deleteTask}
         onEditTask={editTask}
-        onMarkNotDone={markNotDoneThisTime}
       />
     </div>
   );

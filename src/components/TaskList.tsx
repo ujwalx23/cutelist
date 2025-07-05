@@ -7,13 +7,12 @@ interface TaskListProps {
   onToggleTask: (id: string) => void;
   onDeleteTask: (id: string) => void;
   onEditTask: (id: string, newText: string) => void;
-  onMarkNotDone: (id: string) => void;
 }
 
-export function TaskList({ tasks, onToggleTask, onDeleteTask, onEditTask, onMarkNotDone }: TaskListProps) {
+export function TaskList({ tasks, onToggleTask, onDeleteTask, onEditTask }: TaskListProps) {
   if (tasks.length === 0) {
     return (
-      <div className="text-center py-10">
+      <div className="text-center py-10 animate-fade-in">
         <div className="animate-bounce-subtle mb-4">
           <span className="text-4xl">✨</span>
         </div>
@@ -24,16 +23,20 @@ export function TaskList({ tasks, onToggleTask, onDeleteTask, onEditTask, onMark
   }
 
   return (
-    <div>
-      {tasks.map((task) => (
-        <TaskItem 
-          key={task.id} 
-          task={task} 
-          onToggle={onToggleTask} 
-          onDelete={onDeleteTask}
-          onEdit={onEditTask}
-          onMarkNotDone={onMarkNotDone}
-        />
+    <div className="space-y-2">
+      {tasks.map((task, index) => (
+        <div 
+          key={task.id}
+          className="animate-fade-in"
+          style={{ animationDelay: `${index * 0.1}s` }}
+        >
+          <TaskItem 
+            task={task} 
+            onToggle={onToggleTask} 
+            onDelete={onDeleteTask}
+            onEdit={onEditTask}
+          />
+        </div>
       ))}
     </div>
   );

@@ -39,19 +39,19 @@ export function TaskItem({ task, onToggle, onDelete, onEdit }: TaskItemProps) {
 
   return (
     <div className={cn(
-      "flex items-start p-4 rounded-xl border border-white/10 mb-3 bg-white/5 backdrop-blur-sm w-full",
+      "flex items-start p-4 rounded-xl border border-white/10 mb-3 bg-white/5 backdrop-blur-sm w-full max-w-none",
       task.completed && "opacity-60"
     )}>
       <button 
         onClick={() => onToggle(task.id)}
         className={cn(
-          "w-8 h-8 rounded-full border-2 flex items-center justify-center mr-4 flex-shrink-0 mt-1",
+          "w-6 h-6 rounded-full border-2 flex items-center justify-center mr-3 flex-shrink-0 mt-0.5",
           task.completed 
             ? "bg-cutelist-primary border-cutelist-primary text-white" 
             : "border-white/30 hover:border-cutelist-primary"
         )}
       >
-        {task.completed && <Check className="h-5 w-5" />}
+        {task.completed && <Check className="h-4 w-4" />}
       </button>
       
       {isEditing ? (
@@ -83,28 +83,28 @@ export function TaskItem({ task, onToggle, onDelete, onEdit }: TaskItemProps) {
         </div>
       ) : (
         <>
-          <div className="flex-1 mr-4">
-            <span className={cn(
-              "text-white leading-relaxed break-words block text-base",
+          <div className="flex-1 mr-2 min-w-0">
+            <p className={cn(
+              "text-white leading-snug text-base word-wrap break-words hyphens-auto",
               task.completed && "line-through text-white/60"
-            )}>
+            )} style={{ wordBreak: 'break-word', overflowWrap: 'break-word' }}>
               {task.text}
-            </span>
+            </p>
           </div>
-          <div className="flex gap-2 flex-shrink-0">
+          <div className="flex gap-1 flex-shrink-0 ml-2">
             <button 
               onClick={() => setIsEditing(true)}
-              className="text-white/60 hover:text-cutelist-primary p-2 hover:bg-white/10 rounded-lg"
+              className="text-white/60 hover:text-cutelist-primary p-1.5 hover:bg-white/10 rounded-lg"
               title="Edit task"
             >
-              <Edit className="h-5 w-5" />
+              <Edit className="h-4 w-4" />
             </button>
             <button 
               onClick={() => onDelete(task.id)}
-              className="text-white/60 hover:text-red-400 p-2 hover:bg-white/10 rounded-lg"
+              className="text-white/60 hover:text-red-400 p-1.5 hover:bg-white/10 rounded-lg"
               title="Delete task"
             >
-              <Trash className="h-5 w-5" />
+              <Trash className="h-4 w-4" />
             </button>
           </div>
         </>

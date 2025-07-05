@@ -109,6 +109,55 @@ export function TaskContainer() {
     }
   };
 
+  const editTask = async (id: string, newText: string) => {
+    if (!user) return;
+
+    try {
+      // Update in Supabase
+      const { error } = await supabase
+        .from('todos')
+        .update({ content: newText })
+        .eq('id', id);
+
+      if (error) throw error;
+
+      // Update state after successful database update
+      setTasks((prev) =>
+        prev.map((t) =>
+          t.id === id ? { ...t, text: newText } : t
+        )
+      );
+
+      toast({
+        title: "Task updated!",
+        description: "Your task has been successfully updated.",
+      });
+    } catch (error) {
+      console.error('Error editing task:', error);
+      toast({
+        title: "Error",
+        description: "Failed to update task. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const markNotDoneThisTime = async (id: string) => {
+    if (!user) return;
+
+    setTasks((prev) =>
+      prev.map((t) =>
+        t.id === id ? { ...t, notDoneThisTime: true, completed: false } : t
+      )
+    );
+
+    toast({
+      title: "Task marked as not done this time",
+      description: "This task can be improved for next time.",
+      variant: "default",
+    });
+  };
+
   const toggleTask = async (id: string) => {
     if (!user) return;
 
@@ -127,7 +176,7 @@ export function TaskContainer() {
       // Update state after successful database update
       setTasks((prev) =>
         prev.map((t) =>
-          t.id === id ? { ...t, completed: !t.completed } : t
+          t.id === id ? { ...t, completed: !t.completed, notDoneThisTime: false } : t
         )
       );
     } catch (error) {
@@ -201,6 +250,8 @@ export function TaskContainer() {
         tasks={tasks}
         onToggleTask={toggleTask}
         onDeleteTask={deleteTask}
+        onEditTask={editTask}
+        onMarkNotDone={markNotDoneThisTime}
       />
     </div>
   );

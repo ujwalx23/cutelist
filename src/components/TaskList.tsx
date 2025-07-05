@@ -6,9 +6,11 @@ interface TaskListProps {
   tasks: Task[];
   onToggleTask: (id: string) => void;
   onDeleteTask: (id: string) => void;
+  onEditTask: (id: string, newText: string) => void;
+  onMarkNotDone: (id: string) => void;
 }
 
-export function TaskList({ tasks, onToggleTask, onDeleteTask }: TaskListProps) {
+export function TaskList({ tasks, onToggleTask, onDeleteTask, onEditTask, onMarkNotDone }: TaskListProps) {
   if (tasks.length === 0) {
     return (
       <div className="text-center py-10">
@@ -29,6 +31,8 @@ export function TaskList({ tasks, onToggleTask, onDeleteTask }: TaskListProps) {
           task={task} 
           onToggle={onToggleTask} 
           onDelete={onDeleteTask}
+          onEdit={onEditTask}
+          onMarkNotDone={onMarkNotDone}
         />
       ))}
     </div>

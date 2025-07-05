@@ -39,13 +39,13 @@ export function TaskItem({ task, onToggle, onDelete, onEdit }: TaskItemProps) {
 
   return (
     <div className={cn(
-      "flex items-center p-4 rounded-xl border border-white/10 mb-3 bg-white/5 backdrop-blur-sm",
+      "flex items-start p-4 rounded-xl border border-white/10 mb-3 bg-white/5 backdrop-blur-sm w-full",
       task.completed && "opacity-60"
     )}>
       <button 
         onClick={() => onToggle(task.id)}
         className={cn(
-          "w-8 h-8 rounded-full border-2 flex items-center justify-center mr-4 flex-shrink-0",
+          "w-8 h-8 rounded-full border-2 flex items-center justify-center mr-4 flex-shrink-0 mt-1",
           task.completed 
             ? "bg-cutelist-primary border-cutelist-primary text-white" 
             : "border-white/30 hover:border-cutelist-primary"
@@ -55,15 +55,15 @@ export function TaskItem({ task, onToggle, onDelete, onEdit }: TaskItemProps) {
       </button>
       
       {isEditing ? (
-        <div className="flex-1 flex flex-col sm:flex-row gap-3 sm:gap-2 sm:items-center">
+        <div className="flex-1 flex flex-col gap-3">
           <Input
             value={editText}
             onChange={(e) => setEditText(e.target.value)}
             onKeyDown={handleKeyPress}
-            className="flex-1 bg-white/10 border-white/20 text-white placeholder:text-white/50 focus-visible:ring-cutelist-primary focus-visible:border-cutelist-primary"
+            className="w-full bg-white/10 border-white/20 text-white placeholder:text-white/50 focus-visible:ring-cutelist-primary focus-visible:border-cutelist-primary"
             autoFocus
           />
-          <div className="flex gap-2 justify-end sm:justify-start">
+          <div className="flex gap-2 justify-end">
             <Button
               size="sm"
               onClick={handleSaveEdit}
@@ -83,12 +83,14 @@ export function TaskItem({ task, onToggle, onDelete, onEdit }: TaskItemProps) {
         </div>
       ) : (
         <>
-          <span className={cn(
-            "flex-1 text-white mr-4 leading-relaxed",
-            task.completed && "line-through text-white/60"
-          )}>
-            {task.text}
-          </span>
+          <div className="flex-1 mr-4">
+            <span className={cn(
+              "text-white leading-relaxed break-words block text-base",
+              task.completed && "line-through text-white/60"
+            )}>
+              {task.text}
+            </span>
+          </div>
           <div className="flex gap-2 flex-shrink-0">
             <button 
               onClick={() => setIsEditing(true)}

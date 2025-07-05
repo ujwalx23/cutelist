@@ -19,14 +19,6 @@ const Index = () => {
   return (
     <ThemeProvider>
       <div className="min-h-screen flex flex-col bg-cutelist-dark overflow-hidden">
-        {/* Animated background elements */}
-        <div className="fixed inset-0 pointer-events-none">
-          <div className="absolute top-10 left-10 w-20 h-20 bg-cutelist-primary/10 rounded-full animate-pulse"></div>
-          <div className="absolute top-32 right-20 w-16 h-16 bg-cutelist-accent/10 rounded-full animate-bounce-subtle" style={{ animationDelay: '1s' }}></div>
-          <div className="absolute bottom-20 left-1/4 w-12 h-12 bg-cutelist-heart/10 rounded-full animate-pulse" style={{ animationDelay: '2s' }}></div>
-          <div className="absolute bottom-40 right-1/3 w-8 h-8 bg-cutelist-light/10 rounded-full animate-bounce-subtle" style={{ animationDelay: '0.5s' }}></div>
-        </div>
-        
         <Header />
         <main className="flex-1 container flex flex-col items-center justify-center py-12 relative z-10">
           <div className="w-full max-w-4xl px-4">

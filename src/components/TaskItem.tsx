@@ -38,66 +38,75 @@ export function TaskItem({ task, onToggle, onDelete, onEdit }: TaskItemProps) {
   };
 
   return (
-    <div className={cn("task-item animate-fade-in", task.completed && "task-completed")}>
+    <div className={cn(
+      "flex items-center p-4 rounded-xl border border-white/10 mb-3 bg-white/5 backdrop-blur-sm",
+      task.completed && "opacity-60"
+    )}>
       <button 
         onClick={() => onToggle(task.id)}
         className={cn(
-          "w-6 h-6 rounded-full border flex items-center justify-center mr-3 transition-all duration-200 hover:scale-110",
+          "w-8 h-8 rounded-full border-2 flex items-center justify-center mr-4 flex-shrink-0",
           task.completed 
-            ? "bg-cutelist-primary border-cutelist-primary text-white scale-110" 
-            : "border-cutelist-primary/40 hover:border-cutelist-primary hover:shadow-lg"
+            ? "bg-cutelist-primary border-cutelist-primary text-white" 
+            : "border-white/30 hover:border-cutelist-primary"
         )}
       >
-        {task.completed && <Check className="h-4 w-4 animate-scale-in" />}
+        {task.completed && <Check className="h-5 w-5" />}
       </button>
       
       {isEditing ? (
-        <div className="flex-1 flex gap-2 items-center animate-fade-in">
+        <div className="flex-1 flex flex-col sm:flex-row gap-3 sm:gap-2 sm:items-center">
           <Input
             value={editText}
             onChange={(e) => setEditText(e.target.value)}
             onKeyDown={handleKeyPress}
-            className="flex-1 h-8 text-sm border-cutelist-primary/30 focus-visible:ring-cutelist-primary"
+            className="flex-1 bg-white/10 border-white/20 text-white placeholder:text-white/50 focus-visible:ring-cutelist-primary focus-visible:border-cutelist-primary"
             autoFocus
           />
-          <Button
-            size="sm"
-            onClick={handleSaveEdit}
-            className="h-8 px-3 bg-green-600 hover:bg-green-700 transition-all duration-200 hover:scale-105"
-          >
-            Save
-          </Button>
-          <Button
-            size="sm"
-            variant="outline"
-            onClick={handleCancelEdit}
-            className="h-8 px-3 hover:scale-105 transition-all duration-200"
-          >
-            Cancel
-          </Button>
+          <div className="flex gap-2 justify-end sm:justify-start">
+            <Button
+              size="sm"
+              onClick={handleSaveEdit}
+              className="px-6 bg-green-600 hover:bg-green-700 text-white font-medium rounded-lg"
+            >
+              Save
+            </Button>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={handleCancelEdit}
+              className="px-6 border-white/30 text-white hover:bg-white/10 rounded-lg"
+            >
+              Cancel
+            </Button>
+          </div>
         </div>
       ) : (
-        <span className="flex-1 transition-all duration-200">{task.text}</span>
+        <>
+          <span className={cn(
+            "flex-1 text-white mr-4 leading-relaxed",
+            task.completed && "line-through text-white/60"
+          )}>
+            {task.text}
+          </span>
+          <div className="flex gap-2 flex-shrink-0">
+            <button 
+              onClick={() => setIsEditing(true)}
+              className="text-white/60 hover:text-cutelist-primary p-2 hover:bg-white/10 rounded-lg"
+              title="Edit task"
+            >
+              <Edit className="h-5 w-5" />
+            </button>
+            <button 
+              onClick={() => onDelete(task.id)}
+              className="text-white/60 hover:text-red-400 p-2 hover:bg-white/10 rounded-lg"
+              title="Delete task"
+            >
+              <Trash className="h-5 w-5" />
+            </button>
+          </div>
+        </>
       )}
-      
-      <div className="flex gap-1 ml-2">
-        {!isEditing && (
-          <button 
-            onClick={() => setIsEditing(true)}
-            className="text-gray-400 hover:text-blue-500 p-1 transition-all duration-200 hover:scale-110 hover:bg-blue-500/10 rounded"
-            title="Edit task"
-          >
-            <Edit className="h-4 w-4" />
-          </button>
-        )}
-        <button 
-          onClick={() => onDelete(task.id)}
-          className="text-gray-400 hover:text-cutelist-accent p-1 transition-all duration-200 hover:scale-110 hover:bg-red-500/10 rounded"
-          title="Delete task"
-        >
-          <Trash className="h-4 w-4" />
-        </button>
-      </div>
     </div>
   );
 }

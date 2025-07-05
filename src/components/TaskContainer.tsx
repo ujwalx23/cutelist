@@ -225,11 +225,11 @@ export function TaskContainer() {
   }
 
   return (
-    <div className="glass-card p-6 rounded-xl w-full max-w-md animate-fade-in hover:shadow-xl transition-all duration-300">
+    <div className="w-full max-w-2xl mx-auto p-4">
       <div className="flex justify-between items-center mb-6">
-        <h2 className="text-2xl font-bold text-center text-gradient">My Tasks</h2>
+        <h2 className="text-2xl font-bold text-gradient">My Tasks</h2>
         {isLoading && (
-          <div className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 animate-pulse">
+          <div className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
             Loading...
           </div>
         )}

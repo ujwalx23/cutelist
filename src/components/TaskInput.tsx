@@ -23,25 +23,25 @@ export function TaskInput({ onAddTask }: TaskInputProps) {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="flex gap-2 mb-6 animate-fade-in">
+    <form onSubmit={handleSubmit} className="flex flex-col sm:flex-row gap-3 mb-6">
       <Input
         type="text"
         placeholder="Add a new task... ✨"
         value={taskText}
         onChange={(e) => setTaskText(e.target.value)}
-        className="flex-1 bg-cutelist-dark/50 border-cutelist-primary/30 focus-visible:ring-cutelist-primary placeholder:text-gray-500 transition-all duration-200 focus:scale-105 focus:shadow-lg"
+        className="flex-1 bg-white/10 border-white/20 text-white placeholder:text-white/50 focus-visible:ring-cutelist-primary focus-visible:border-cutelist-primary rounded-xl h-12 px-4"
         disabled={isAdding}
       />
       <Button 
         type="submit"
         disabled={isAdding || !taskText.trim()}
-        className="bg-gradient-to-r from-cutelist-primary to-cutelist-heart hover:from-cutelist-secondary hover:to-cutelist-primary text-white transition-all duration-200 hover:scale-105 hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
+        className="bg-gradient-to-r from-cutelist-primary to-cutelist-heart hover:from-cutelist-secondary hover:to-cutelist-primary text-white h-12 px-6 rounded-xl font-medium disabled:opacity-50 disabled:cursor-not-allowed sm:w-auto w-full"
       >
         {isAdding ? (
-          <div className="animate-spin w-4 h-4 border-2 border-white border-t-transparent rounded-full"></div>
+          <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
         ) : (
           <>
-            <Plus className="mr-1 h-4 w-4" />
+            <Plus className="mr-2 h-5 w-5" />
             Add
           </>
         )}

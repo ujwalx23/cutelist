@@ -12,8 +12,8 @@ interface TaskListProps {
 export function TaskList({ tasks, onToggleTask, onDeleteTask, onEditTask }: TaskListProps) {
   if (tasks.length === 0) {
     return (
-      <div className="text-center py-10 animate-fade-in">
-        <div className="animate-bounce-subtle mb-4">
+      <div className="text-center py-10">
+        <div className="mb-4">
           <span className="text-4xl">✨</span>
         </div>
         <h3 className="text-lg font-medium text-cutelist-primary mb-2">Your list is empty</h3>
@@ -23,20 +23,15 @@ export function TaskList({ tasks, onToggleTask, onDeleteTask, onEditTask }: Task
   }
 
   return (
-    <div className="space-y-2">
-      {tasks.map((task, index) => (
-        <div 
+    <div className="space-y-3">
+      {tasks.map((task) => (
+        <TaskItem 
           key={task.id}
-          className="animate-fade-in"
-          style={{ animationDelay: `${index * 0.1}s` }}
-        >
-          <TaskItem 
-            task={task} 
-            onToggle={onToggleTask} 
-            onDelete={onDeleteTask}
-            onEdit={onEditTask}
-          />
-        </div>
+          task={task} 
+          onToggle={onToggleTask} 
+          onDelete={onDeleteTask}
+          onEdit={onEditTask}
+        />
       ))}
     </div>
   );

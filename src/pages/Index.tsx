@@ -28,7 +28,7 @@ const Index = () => {
                   Welcome to CuteList
                 </h1>
                 <p className="text-center text-gray-400 text-lg md:text-xl animate-fade-in" style={{ animationDelay: '0.3s' }}>
-                  Manage your tasks in the cutest way possible ✨
+                  Manage your tasks in the cutest way possible 
                 </p>
               </div>
               

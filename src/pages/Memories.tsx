@@ -223,10 +223,9 @@ const Memories = () => {
     mutationFn: async (memoryId: string) => {
       if (!user) throw new Error("User not authenticated");
       
-      // Allow deletion of default memory when user is signed in
+      // Prevent deletion of default memory
       if (memoryId === "default-memory") {
-        // Don't actually delete from database, just remove from local state
-        return { success: true, isDefault: true };
+        throw new Error("Default memories cannot be deleted");
       }
       
       const { error } = await supabase
@@ -239,11 +238,9 @@ const Memories = () => {
       
       return { success: true, isDefault: false };
     },
-    onSuccess: (data) => {
-      if (!data.isDefault) {
-        queryClient.invalidateQueries({queryKey: ['memories', user?.id]});
-        refetchMemories();
-      }
+    onSuccess: () => {
+      queryClient.invalidateQueries({queryKey: ['memories', user?.id]});
+      refetchMemories();
       toast({
         title: "Memory Deleted",
         description: "Your memory has been deleted successfully.",
@@ -265,10 +262,9 @@ const Memories = () => {
     mutationFn: async (quoteId: string) => {
       if (!user) throw new Error("User not authenticated");
       
-      // Allow deletion of default quotes when user is signed in
+      // Prevent deletion of default quotes
       if (quoteId.startsWith("default-")) {
-        // Don't actually delete from database, just remove from local state
-        return { success: true, isDefault: true };
+        throw new Error("Default quotes cannot be deleted");
       }
       
       const { error } = await supabase
@@ -281,11 +277,9 @@ const Memories = () => {
       
       return { success: true, isDefault: false };
     },
-    onSuccess: (data) => {
-      if (!data.isDefault) {
-        queryClient.invalidateQueries({queryKey: ['quotes']});
-        refetchQuotes();
-      }
+    onSuccess: () => {
+      queryClient.invalidateQueries({queryKey: ['quotes']});
+      refetchQuotes();
       toast({
         title: "Quote Deleted",
         description: "Your quote has been deleted successfully.",

@@ -28,8 +28,8 @@ export const QuoteCard = ({
   currentUserId,
   onDelete,
 }: QuoteProps) => {
-  // Allow deletion if user is signed in and either owns the quote or it's a default quote
-  const canDelete = currentUserId && (user_id === currentUserId || user_id === "default");
+// Allow deletion only for the owner's quotes (not default)
+const canDelete = !!currentUserId && user_id === currentUserId && !id.startsWith("default-");
 
   return (
     <Card className="overflow-hidden">

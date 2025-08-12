@@ -35,6 +35,8 @@ export const ViewMemoryModal = ({
 }: ViewMemoryModalProps) => {
   if (!memory) return null;
 
+  const canDelete = currentUserId && memory.user_id === currentUserId && memory.id !== 'default-memory';
+
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-xl">
@@ -53,14 +55,16 @@ export const ViewMemoryModal = ({
               }`}
             />
           </Button>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-7 w-7 text-gray-400 hover:text-red-500"
-            onClick={() => onDelete(memory.id)}
-          >
-            <Trash2 className="h-5 w-5" />
-          </Button>
+          {canDelete && (
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-7 w-7 text-gray-400 hover:text-red-500"
+              onClick={() => onDelete(memory.id)}
+            >
+              <Trash2 className="h-5 w-5" />
+            </Button>
+          )}
           <Button
             variant="ghost"
             size="icon"

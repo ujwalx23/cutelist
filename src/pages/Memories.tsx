@@ -243,7 +243,7 @@ const Memories = () => {
       refetchMemories();
       toast({
         title: "Memory Deleted",
-        description: "Your memory has been deleted successfully.",
+        description: "Your memory has been deleted successfully.(Default Memories can't be deleted)"",
       });
       setIsViewModalOpen(false);
       setActiveMemory(null);
@@ -282,7 +282,7 @@ const Memories = () => {
       refetchQuotes();
       toast({
         title: "Quote Deleted",
-        description: "Your quote has been deleted successfully.",
+        description: "Your quote has been deleted successfully.(Default Quotes can't be deleted)",
       });
     },
     onError: (error) => {
